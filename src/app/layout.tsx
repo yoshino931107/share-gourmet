@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Noto_Sans_JP as FontSans } from "next/font/google";
 import "./globals.css";
+import { ControlViewport } from "../components/ui/ControlViewport";
 
 import { cn } from "@/lib/utils";
 
@@ -29,6 +30,7 @@ export default function RootLayout({
           "bg-gradient-to-t from-neutral-300 via-neutral-200 to-neutral-100",
         )}
       >
+        <ControlViewport />
         {children}
       </body>
     </html>

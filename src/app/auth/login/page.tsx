@@ -52,7 +52,7 @@ const Page: NextPage = () => {
             <CardHeader>
               <CardTitle>ログイン</CardTitle>
               <CardDescription>
-                ユーザー名/パスワードによるログイン
+                メールアドレス/パスワードによるログイン
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -61,7 +61,7 @@ const Page: NextPage = () => {
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>ユーザー名</FormLabel>
+                    <FormLabel>メールアドレス</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
