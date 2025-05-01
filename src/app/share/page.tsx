@@ -22,7 +22,7 @@ export default function Home() {
   //   checkAuth();
   // }, []);
 
-  const dummyImages = Array(12).fill("https://placehold.jp/150x150.png");
+  const dummyImages = Array(30).fill("https://placehold.jp/150x150.png");
 
   return (
     <div className="mx-auto flex h-screen max-w-md flex-col">
