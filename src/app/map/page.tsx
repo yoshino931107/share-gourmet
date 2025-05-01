@@ -1,6 +1,4 @@
 "use client";
-import Link from "next/link";
-import { useEffect } from "react";
 import Header from "@/components/ui/header";
 import Tab from "@/components/ui/tab";
 import { MapContent } from "@/components/ui/Map";
