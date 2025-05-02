@@ -82,4 +82,13 @@ const config = {
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;
 
+module.exports = {
+  theme: {
+    extend: {
+      fontFamily: {
+        rounded: ['"M PLUS Rounded 1c"', "sans-serif"],
+      },
+    },
+  },
+};
 export default config;

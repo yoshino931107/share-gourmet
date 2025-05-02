@@ -1,6 +1,7 @@
-import type { NextConfig } from "next";
+// next.config.ts
 
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   images: {
     remotePatterns: [
       {
@@ -16,6 +17,7 @@ const nextConfig: NextConfig = {
         pathname: "/410x250.png",
       },
     ],
+    domains: ["images.unsplash.com"],
   },
 };
 

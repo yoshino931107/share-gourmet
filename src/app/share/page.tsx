@@ -1,12 +1,76 @@
 "use client";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/ui/header";
 import Tab from "@/components/ui/tab";
 import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 export default function Home() {
+  const [sharedShopIds, setSharedShopIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchSharedShops = async () => {
+      const { data, error } = await supabase
+        .from("shared_shops")
+        .select("hotpepper_id")
+        .order("created_at", { ascending: false });
+
+      if (data) {
+        setSharedShopIds(data.map((row) => row.hotpepper_id));
+      }
+    };
+
+    fetchSharedShops();
+  }, []);
+
+  const [shops, setShops] = useState([]);
+
+  useEffect(() => {
+    if (sharedShopIds.length === 0) return;
+
+    const fetchShops = async () => {
+      const results = await Promise.all(
+        sharedShopIds.map(async (id) => {
+          const res = await fetch("/api/hotpepper", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ id }),
+          });
+
+          const data = await res.json();
+          return data ?? null;
+        }),
+      );
+
+      setShops(results.filter(Boolean));
+    };
+
+    fetchShops();
+  }, [sharedShopIds]);
+
+  const handleShareShop = async (shop) => {
+    const { data, error } = await supabase.from("shared_shops").insert([
+      {
+        user_id: user.id,
+        hotpepper_id: shop.id,
+        name: shop.name,
+        image_url: shop.photo.pc.l,
+        url: shop.urls.pc,
+        address: shop.address,
+        genre: shop.genre.name,
+      },
+    ]);
+
+    if (error) {
+      console.error("❌ 登録エラー:", error);
+    } else {
+      console.log("✅ シェア完了！");
+    }
+  };
+
   const router = useRouter();
   const supabase = createClientComponentClient();
 
@@ -22,23 +86,50 @@ export default function Home() {
   //   checkAuth();
   // }, []);
 
-  const dummyImages = Array(30).fill("https://placehold.jp/150x150.png");
+  const dummyImages = Array(30).fill("https://placehold.jp/120x120.png");
 
   return (
     <div className="mx-auto flex h-screen max-w-md flex-col">
       <Header />
       <main className="flex-1 overflow-y-auto bg-gray-50 p-2">
-        <div className="grid grid-cols-3 gap-2">
-          {dummyImages.map((src, i) => (
-            <Link href={`/shop/${i}`} key={i}>
-              <img
-                src={src}
-                alt={`Shop ${i}`}
-                className="aspect-square w-full rounded object-cover"
-              />
-            </Link>
-          ))}
-        </div>
+        {shops.length === 0 ? (
+          <div className="grid grid-cols-3 gap-px bg-gray-300">
+            {Array(6)
+              .fill(0)
+              .map((_, index) => (
+                <div key={index} className="animate-pulse bg-white p-2">
+                  <div className="aspect-square w-full bg-gray-200" />
+                  <div className="mt-1 h-3 w-2/3 bg-gray-200" />
+                  <div className="mt-1 h-2 w-1/2 bg-gray-100" />
+                </div>
+              ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-px bg-gray-300">
+            {shops.map((shop) => (
+              <Link
+                href={`/shop/${shop.id}`}
+                key={shop.id}
+                className="bg-white p-2"
+              >
+                <img
+                  src={
+                    shop.photo?.pc?.l ||
+                    "https://images.unsplash.com/photo-1555992336-c47a0c5141a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+                  }
+                  alt={shop.name}
+                  className="aspect-square w-full object-cover"
+                />
+                <div className="mt-1 truncate text-sm font-bold">
+                  {shop.name}
+                </div>
+                <div className="truncate text-xs text-gray-500">
+                  {shop.genre?.name}
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </main>
       <Tab />
     </div>
