@@ -6,6 +6,9 @@ import Tab from "@/components/ui/tab";
 import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
+const fallbackImage =
+  "https://images.unsplash.com/photo-1555992336-c47a0c5141a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80";
+
 export default function Home() {
   const [sharedShopIds, setSharedShopIds] = useState<string[]>([]);
 
@@ -97,7 +100,7 @@ export default function Home() {
             {Array(6)
               .fill(0)
               .map((_, index) => (
-                <div key={index} className="animate-pulse bg-white p-2">
+                <div key={index} className="bg-white p-2">
                   <div className="aspect-square w-full bg-gray-200" />
                   <div className="mt-1 h-3 w-2/3 bg-gray-200" />
                   <div className="mt-1 h-2 w-1/2 bg-gray-100" />
@@ -113,10 +116,7 @@ export default function Home() {
                 className="bg-white p-2"
               >
                 <img
-                  src={
-                    shop.photo?.pc?.l ||
-                    "https://images.unsplash.com/photo-1555992336-c47a0c5141a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
-                  }
+                  src={shop?.photo?.pc?.l ? shop.photo.pc.l : fallbackImage}
                   alt={shop.name}
                   className="aspect-square w-full object-cover"
                 />

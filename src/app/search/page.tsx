@@ -7,13 +7,27 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import { useEffect, useState } from "react";
 
+function extractHotpepperIdFromUrl(url: string): string | null {
+  const match = url.match(/\/str(J\d{9})\//);
+  return match ? match[1] : null;
+}
+
 export default function SearchPage() {
   const [searchWord, setSearchWord] = useState("");
 
   const [hotpepperResults, setHotpepperResults] = useState([]);
 
+  const router = useRouter();
+  const supabase = createClientComponentClient();
+
   useEffect(() => {
     if (searchWord.trim() === "") return;
+
+    const id = extractHotpepperIdFromUrl(searchWord.trim());
+    if (id) {
+      router.push(`/shop/${id}`);
+      return;
+    }
 
     const fetchData = async () => {
       const res = await fetch(
@@ -27,9 +41,6 @@ export default function SearchPage() {
 
     fetchData();
   }, [searchWord]);
-
-  const router = useRouter();
-  const supabase = createClientComponentClient();
 
   const dummyImages = Array(30).fill("https://placehold.jp/150x150.png");
 
