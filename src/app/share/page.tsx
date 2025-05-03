@@ -12,6 +12,9 @@ const fallbackImage =
 export default function Home() {
   const [sharedShopIds, setSharedShopIds] = useState<string[]>([]);
 
+  const [selectedGroup, setSelectedGroup] = useState("すべて");
+  const groups = ["すべて", "ラーメン部", "カフェ会"];
+
   useEffect(() => {
     const fetchSharedShops = async () => {
       const { data, error } = await supabase
@@ -94,10 +97,25 @@ export default function Home() {
   return (
     <div className="mx-auto flex h-screen max-w-md flex-col">
       <Header />
+      <div className="flex justify-around border-b bg-white px-4 py-2">
+        {groups.map((group) => (
+          <button
+            key={group}
+            onClick={() => setSelectedGroup(group)}
+            className={`text-sm font-medium ${
+              selectedGroup === group
+                ? "border-b-2 border-orange-400 text-orange-400"
+                : "text-gray-500"
+            }`}
+          >
+            {group}
+          </button>
+        ))}
+      </div>
       <main className="flex-1 overflow-y-auto bg-gray-50 p-2">
         {shops.length === 0 ? (
           <div className="grid grid-cols-3 gap-px bg-gray-300">
-            {Array(6)
+            {Array(15)
               .fill(0)
               .map((_, index) => (
                 <div key={index} className="bg-white p-2">
