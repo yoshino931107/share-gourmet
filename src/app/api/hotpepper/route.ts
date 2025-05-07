@@ -1,13 +1,26 @@
-// app/api/hotpepper/route.ts
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  const { id } = await req.json();
+  const { keyword } = await req.json();
+  const apiKey = process.env.HOTPEPPER_API_KEY;
 
-  const res = await fetch(
-    `https://webservice.recruit.co.jp/hotpepper/gourmet/v1/?key=${process.env.NEXT_PUBLIC_HOTPEPPER_API_KEY}&id=${id}&format=json`,
-  );
+  const url = `https://webservice.recruit.co.jp/hotpepper/gourmet/v1/?key=${apiKey}&keyword=${encodeURIComponent(keyword)}&format=json`;
 
-  const data = await res.json();
-  return NextResponse.json(data.results.shop?.[0] || null);
+  try {
+    const res = await fetch(url);
+
+    if (!res.ok) {
+      console.error("🔥 Hotpepper fetch failed:", res.status);
+      return NextResponse.json([], { status: res.status });
+    }
+
+    const data = await res.json();
+
+    console.log("📦 Hotpepper response data:", data);
+
+    return NextResponse.json({ shops: data.results.shop || [] });
+  } catch (error) {
+    console.error("🔥 Error fetching Hotpepper API:", error);
+    return NextResponse.json([], { status: 500 });
+  }
 }

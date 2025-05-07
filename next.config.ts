@@ -17,7 +17,7 @@ const nextConfig = {
         pathname: "/410x250.png",
       },
     ],
-    domains: ["images.unsplash.com"],
+    domains: ["imgfp.hotp.jp", "images.unsplash.com"],
   },
 };
 

@@ -11,42 +11,62 @@ import {
 import { supabase } from "@/utils/supabase/supabase";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
 export default function Detail() {
-  const router = useRouter();
   const [shop, setShop] = useState<any>(null);
+  const params = useParams();
 
   useEffect(() => {
-    const path = window.location.pathname;
-    const segments = path.split("/");
-    const id = segments[segments.length - 1];
+    const id = params?.id as string;
+
+    if (!id) return;
 
     const fetchShop = async () => {
-      const res = await fetch("/api/hotpepper", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id }),
-      });
+      try {
+        const res = await fetch("/api/hotpepper", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ id }),
+        });
 
-      const data = await res.json();
-      setShop(data);
+        const data = await res.json();
+        console.log("🔥 Hotpepperデータ:", data); // デバッグログ
+        setShop(data);
+      } catch (error) {
+        console.error("❌ Fetchエラー:", error);
+      }
     };
 
     fetchShop();
-  }, []);
+  }, [params]);
 
-  const handleShare = async () => {
-    const { data, error } = await supabase.from("shared_shops").insert([
+  const router = useRouter();
+  const [showGroupModal, setShowGroupModal] = useState(false);
+  const [groups, setGroups] = useState([
+    { id: "ramen-group-id", name: "ラーメン部" },
+    { id: "cafe-group-id", name: "カフェ会" },
+  ]);
+
+  const handleShare = () => {
+    setShowGroupModal(true);
+  };
+
+  const handleGroupSelect = async (groupId: string) => {
+    setShowGroupModal(false);
+
+    const { error } = await supabase.from("shared_shops").insert([
       {
-        user_id: null, // ← あとで認証機能を実装したらuser.idを入れる ＆ supabaseのセキュリティちゃんとする
+        user_id: "demo-user-id",
         hotpepper_id: shop?.id,
         name: shop?.name,
         image_url: shop?.photo?.pc?.l,
         url: shop?.urls?.pc,
         address: shop?.address,
-        genre: shop?.genre,
+        genre: shop?.genre?.name,
+        group_id: groupId,
       },
     ]);
 
@@ -54,7 +74,7 @@ export default function Detail() {
       console.error("❌ シェア失敗:", error);
       alert("シェアに失敗しました🥲");
     } else {
-      alert("シェアしました🎉");
+      alert("グループにシェアしました🎉");
     }
   };
 
@@ -149,6 +169,26 @@ export default function Detail() {
           <div className="p-4 text-center text-gray-500">読み込み中...</div>
         )}
       </main>
+      {showGroupModal && (
+        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
+          <div className="w-72 rounded bg-white p-4">
+            <h2 className="mb-2 text-center font-bold text-gray-700">
+              どのグループにシェアしますか？
+            </h2>
+            <div className="space-y-2">
+              {groups.map((group) => (
+                <button
+                  key={group.id}
+                  onClick={() => handleGroupSelect(group.id)}
+                  className="w-full rounded bg-orange-100 px-3 py-2 text-sm text-orange-600 hover:bg-orange-200"
+                >
+                  {group.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       <div className="fixed bottom-25 left-1/2 z-10 flex w-full max-w-md -translate-x-1/2 justify-between gap-x-2 bg-transparent px-4 py-2">
         <button className="flex flex-1 flex-col items-center rounded-xl border border-gray-500 bg-gray-100 bg-gradient-to-b from-white via-gray-100 to-gray-200 py-2 text-xs text-gray-700 shadow-md">
           <BookmarkIcon className="mb-1 h-6 w-6 text-gray-700" />

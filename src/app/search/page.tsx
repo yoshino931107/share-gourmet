@@ -155,26 +155,122 @@ export default function SearchPage() {
   const router = useRouter();
   const supabase = createClientComponentClient();
 
-  useEffect(() => {
-    if (searchWord.trim() === "") return;
+  // ジャンル名→ジャンルコード変換マップ
+  const genreMap: { [key: string]: string } = {
+    カフェ: "G014",
+    居酒屋: "G001",
+    和食: "G004",
+    洋食: "G005",
+    中華: "G006",
+    焼肉: "G008",
+    韓国料理: "G017",
+    イタリアン: "G006",
+    フレンチ: "G007",
+    バー: "G002",
+    ベーカリー: "G016",
+    ヘルシー: "G012",
+  };
 
-    const id = extractHotpepperIdFromUrl(searchWord.trim());
+  // エリア名 → small_area コード変換マップ
+  const areaMap: { [key: string]: string } = {
+    渋谷: "Z011",
+    新宿: "Z002",
+    池袋: "Z003",
+    表参道: "Z014",
+    吉祥寺: "Z006",
+    原宿: "Z012",
+    恵比寿: "Z010",
+    中目黒: "Z013",
+  };
+
+  // small_area コード → エリア名 逆引きマップ
+  const areaNameMap: { [key: string]: string } = {
+    Z011: "渋谷",
+    Z002: "新宿",
+    Z003: "池袋",
+    Z014: "表参道",
+    Z006: "吉祥寺",
+    Z012: "原宿",
+    Z010: "恵比寿",
+    Z013: "中目黒",
+  };
+
+  const buildSearchBody = (search: string) => {
+    const parts = search.trim().split(/\s+/);
+    const genreKey = parts[0];
+    const locationKey = parts[1] || "";
+
+    const genreCode = genreMap[genreKey];
+    const areaCode = areaMap[locationKey];
+
+    const keywordParts = [];
+    if (!genreCode) keywordParts.push(genreKey);
+    if (!areaCode) keywordParts.push(locationKey);
+
+    const body: any = {
+      keyword: keywordParts.join(" "),
+    };
+
+    if (genreCode) {
+      body.genre = genreCode;
+    }
+
+    if (areaCode) {
+      body.small_area = areaCode;
+    }
+
+    return body;
+  };
+
+  const fetchData = async (keyword: string) => {
+    if (!keyword.trim()) return;
+
+    const id = extractHotpepperIdFromUrl(keyword.trim());
     if (id) {
       router.push(`/shop/${id}`);
       return;
     }
 
-    const fetchData = async () => {
-      const res = await fetch(
-        `https://webservice.recruit.co.jp/hotpepper/gourmet/v1/?key=${process.env.NEXT_PUBLIC_HOTPEPPER_API_KEY}&keyword=${encodeURIComponent(
-          searchWord,
-        )}&format=json`,
-      );
-      const data = await res.json();
-      setHotpepperResults(data.results.shop || []);
-    };
+    const res = await fetch("/api/hotpepper", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(buildSearchBody(searchWord)),
+    });
 
-    fetchData();
+    if (!res.ok) {
+      console.error("🔥 API error:", res.status);
+      return;
+    }
+
+    const text = await res.text();
+
+    if (!text) {
+      console.error("⚠️ 空のレスポンスでした！");
+      return;
+    }
+
+    const data = JSON.parse(text);
+
+    const parts = searchWord.trim().split(/\s+/);
+    const genreKey = parts[0];
+    const locationKey = parts[1] || "";
+
+    const filteredResults = (data.results?.shop || []).filter((shop: any) => {
+      const nameAndAddress = `${shop.name} ${shop.small_area.name}`;
+      return (
+        nameAndAddress.includes(genreKey) ||
+        nameAndAddress.includes(locationKey)
+      );
+    });
+
+    setHotpepperResults(filteredResults);
+  };
+
+  useEffect(() => {
+    if (searchWord.trim() === "") return;
+    fetchData(searchWord);
   }, [searchWord]);
 
   const dummyImages = Array(30).fill("https://placehold.jp/150x150.png");
@@ -183,7 +279,7 @@ export default function SearchPage() {
     <div className="mx-auto flex h-screen max-w-md flex-col">
       <Header />
       <main className="flex-1 overflow-y-auto bg-gray-50 p-2">
-        <div className="mt-2 mb-4 flex items-center rounded-xl border border-gray-300 bg-white px-3 py-2">
+        <div className="mt-2 mr-1.5 mb-5 ml-1.5 flex items-center rounded-xl border border-gray-300 bg-white px-1 py-1">
           <MagnifyingGlassIcon className="mr-2 h-7 w-5 text-gray-400" />
           <input
             type="text"
@@ -191,7 +287,21 @@ export default function SearchPage() {
             className="w-full text-sm focus:outline-none"
             value={searchWord}
             onChange={(e) => setSearchWord(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                setSearchWord(e.currentTarget.value);
+              }
+            }}
           />
+          <button
+            onClick={() => {
+              fetchData(searchWord);
+              router.push(`/result?keyword=${encodeURIComponent(searchWord)}`);
+            }}
+            className="w-17 items-center rounded-lg bg-gray-500 px-2 py-2 text-sm font-semibold text-white"
+          >
+            検索
+          </button>
         </div>
         {recommendedShops.length > 0 && (
           <div className="mb-6">

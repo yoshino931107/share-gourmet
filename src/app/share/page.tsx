@@ -10,7 +10,7 @@ const fallbackImage =
   "https://images.unsplash.com/photo-1555992336-c47a0c5141a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80";
 
 export default function Home() {
-  const [sharedShopIds, setSharedShopIds] = useState<string[]>([]);
+  const [sharedShops, setSharedShops] = useState<any[]>([]);
 
   const [selectedGroup, setSelectedGroup] = useState("すべて");
   const groups = ["すべて", "ラーメン部", "カフェ会"];
@@ -19,11 +19,11 @@ export default function Home() {
     const fetchSharedShops = async () => {
       const { data, error } = await supabase
         .from("shared_shops")
-        .select("hotpepper_id")
+        .select("hotpepper_id, group:groups(name)")
         .order("created_at", { ascending: false });
 
       if (data) {
-        setSharedShopIds(data.map((row) => row.hotpepper_id));
+        setSharedShops(data);
       }
     };
 
@@ -33,21 +33,21 @@ export default function Home() {
   const [shops, setShops] = useState([]);
 
   useEffect(() => {
-    if (sharedShopIds.length === 0) return;
+    if (sharedShops.length === 0) return;
 
     const fetchShops = async () => {
       const results = await Promise.all(
-        sharedShopIds.map(async (id) => {
+        sharedShops.map(async (shared) => {
           const res = await fetch("/api/hotpepper", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ id }),
+            body: JSON.stringify({ id: shared.hotpepper_id }),
           });
 
           const data = await res.json();
-          return data ?? null;
+          return data ? { ...data, groupName: shared.group.name } : null;
         }),
       );
 
@@ -55,7 +55,7 @@ export default function Home() {
     };
 
     fetchShops();
-  }, [sharedShopIds]);
+  }, [sharedShops]);
 
   const handleShareShop = async (shop) => {
     const { data, error } = await supabase.from("shared_shops").insert([
@@ -94,6 +94,10 @@ export default function Home() {
 
   const dummyImages = Array(30).fill("https://placehold.jp/120x120.png");
 
+  const filteredShops = shops.filter((shop) =>
+    selectedGroup === "すべて" ? true : shop.groupName === selectedGroup,
+  );
+
   return (
     <div className="mx-auto flex h-screen max-w-md flex-col">
       <Header />
@@ -113,7 +117,7 @@ export default function Home() {
         ))}
       </div>
       <main className="flex-1 overflow-y-auto bg-gray-50 p-2">
-        {shops.length === 0 ? (
+        {filteredShops.length === 0 ? (
           <div className="grid grid-cols-3 gap-px bg-gray-300">
             {Array(15)
               .fill(0)
@@ -127,7 +131,7 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-3 gap-px bg-gray-300">
-            {shops.map((shop) => (
+            {filteredShops.map((shop) => (
               <Link
                 href={`/shop/${shop.id}`}
                 key={shop.id}

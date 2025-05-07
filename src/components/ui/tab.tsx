@@ -17,7 +17,7 @@ export default function Tab() {
             }`}
           >
             <Image
-              src="share-icon.svg"
+              src="/share-icon.svg"
               alt="share SVG"
               width={48}
               height={48}
@@ -34,7 +34,7 @@ export default function Tab() {
                 : "bg-gradient-to-b from-orange-50 via-orange-100 to-orange-200"
             }`}
           >
-            <Image src="map-icon.svg" alt="map SVG" width={41} height={41} />
+            <Image src="/map-icon.svg" alt="map SVG" width={41} height={41} />
             <span className="text-sm font-black">マップ</span>
           </Link>
         </div>
@@ -48,7 +48,7 @@ export default function Tab() {
             }`}
           >
             <Image
-              src="search-icon.svg"
+              src="/search-icon.svg"
               alt="search SVG"
               width={41}
               height={41}
@@ -66,7 +66,7 @@ export default function Tab() {
             }`}
           >
             <Image
-              src="mypage-icon.svg"
+              src="/mypage-icon.svg"
               alt="mypage SVG"
               width={41}
               height={41}
