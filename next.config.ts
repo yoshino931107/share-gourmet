@@ -8,16 +8,16 @@ const nextConfig = {
         protocol: "https",
         hostname: "placehold.jp",
         port: "",
-        pathname: "/150x150.png",
+        pathname: "/**",
       },
       {
         protocol: "https",
-        hostname: "placehold.jp",
+        hostname: "imgfp.hotp.jp",
         port: "",
-        pathname: "/410x250.png",
+        pathname: "/**",
       },
     ],
-    domains: ["imgfp.hotp.jp", "images.unsplash.com"],
+    domains: ["imgfp.hotp.jp", "images.unsplash.com", "placehold.jp"],
   },
 };
 

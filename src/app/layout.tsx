@@ -27,7 +27,7 @@ export default function RootLayout({
         className={cn(
           "bg-background min-h-screen font-sans antialiased",
           "flex flex-col items-center justify-center",
-          "bg-gradient-to-t from-neutral-300 via-neutral-200 to-neutral-100",
+          "bg-neutral-200",
         )}
       >
         {children}

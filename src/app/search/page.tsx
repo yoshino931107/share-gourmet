@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import Header from "@/components/ui/header";
 import Tab from "@/components/ui/tab";
 import { useRouter } from "next/navigation";
@@ -17,143 +18,55 @@ export default function SearchPage() {
 
   const [hotpepperResults, setHotpepperResults] = useState([]);
 
-  const [recommendedShops, setRecommendedShops] = useState([
-    {
-      id: "dummy1",
-      name: "おすすめラーメン",
-      genre: { name: "ラーメン" },
-      photo: {
-        pc: {
-          l: "https://images.unsplash.com/photo-1555992336-c47a0c5141a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-        },
-      },
-      urls: { pc: "#" },
-    },
-    {
-      id: "dummy2",
-      name: "まったりカフェ",
-      genre: { name: "カフェ" },
-      photo: {
-        pc: {
-          l: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-        },
-      },
-      urls: { pc: "#" },
-    },
-    {
-      id: "dummy3",
-      name: "餃子居酒屋",
-      genre: { name: "居酒屋" },
-      photo: {
-        pc: {
-          l: "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-        },
-      },
-      urls: { pc: "#" },
-    },
-    {
-      id: "dummy4",
-      name: "焼肉太郎",
-      genre: { name: "焼肉" },
-      photo: {
-        pc: {
-          l: "https://images.unsplash.com/photo-1606755962778-b991dd052fa3?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-        },
-      },
-      urls: { pc: "#" },
-    },
-    {
-      id: "dummy5",
-      name: "ネオ喫茶",
-      genre: { name: "カフェ" },
-      photo: {
-        pc: {
-          l: "https://images.unsplash.com/photo-1550966871-3ed2f66f2d02?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-        },
-      },
-      urls: { pc: "#" },
-    },
-    {
-      id: "dummy6",
-      name: "洋食ダイナー",
-      genre: { name: "洋食" },
-      photo: {
-        pc: {
-          l: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-        },
-      },
-      urls: { pc: "#" },
-    },
-    {
-      id: "dummy7",
-      name: "天ぷら小町",
-      genre: { name: "和食" },
-      photo: {
-        pc: {
-          l: "https://images.unsplash.com/photo-1603297631365-e3c36c94a4dc?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-        },
-      },
-      urls: { pc: "#" },
-    },
-    {
-      id: "dummy8",
-      name: "寿司一番",
-      genre: { name: "寿司" },
-      photo: {
-        pc: {
-          l: "https://images.unsplash.com/photo-1585238342028-3edb5aef3ae5?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-        },
-      },
-      urls: { pc: "#" },
-    },
-    {
-      id: "dummy9",
-      name: "ピザ屋さん",
-      genre: { name: "イタリアン" },
-      photo: {
-        pc: {
-          l: "https://images.unsplash.com/photo-1548365328-5c8f7c7d4bfc?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-        },
-      },
-      urls: { pc: "#" },
-    },
-    {
-      id: "dummy10",
-      name: "ベーカリー カフェ",
-      genre: { name: "ベーカリー" },
-      photo: {
-        pc: {
-          l: "https://images.unsplash.com/photo-1604908812961-934ddae41201?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-        },
-      },
-      urls: { pc: "#" },
-    },
-    {
-      id: "dummy11",
-      name: "中華食堂",
-      genre: { name: "中華" },
-      photo: {
-        pc: {
-          l: "https://images.unsplash.com/photo-1613141411985-e8e5b3089f2b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-        },
-      },
-      urls: { pc: "#" },
-    },
-    {
-      id: "dummy12",
-      name: "ベジカフェ",
-      genre: { name: "ヘルシー" },
-      photo: {
-        pc: {
-          l: "https://images.unsplash.com/photo-1523986371872-9d3ba2e2f642?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-        },
-      },
-      urls: { pc: "#" },
-    },
-  ]);
+  const [recommendedShops, setRecommendedShops] = useState([]);
+
+  // HotPepper 画像URLを安全に取得
+  const getSafeLogoImage = (shop: any) => {
+    const photoUrl =
+      shop.image || // API で整形済み
+      shop.photo?.pc?.l ||
+      shop.photo?.pc?.m ||
+      shop.photo?.pc?.s ||
+      shop.logo_image;
+
+    if (!photoUrl || photoUrl.includes("noimage.jpg")) {
+      return "https://placehold.jp/150x150.png";
+    }
+    return photoUrl.replace("http://", "https://");
+  };
 
   const router = useRouter();
   const supabase = createClientComponentClient();
+
+  useEffect(() => {
+    const fetchRecommendedShops = async () => {
+      console.log(recommendedShops);
+      const res = await fetch("/api/hotpepper", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          keyword: "カフェ", // デフォルトで「カフェ」を指定
+          genre: "G014", // カフェ・スイーツ
+          count: 30,
+        }),
+      });
+
+      if (!res.ok) {
+        console.error("🔥 おすすめ店舗取得失敗:", res.status);
+        return;
+      }
+
+      const data = await res.json();
+      const shops = Array.isArray(data) ? data : [];
+      console.log("ショップ数:", shops.length);
+      console.log("🧪 おすすめ店舗:", shops); // ←これ追加してみよう！
+      setRecommendedShops(shops.slice(0, 12));
+    };
+
+    fetchRecommendedShops();
+  }, []);
 
   // ジャンル名→ジャンルコード変換マップ
   const genreMap: { [key: string]: string } = {
@@ -203,7 +116,7 @@ export default function SearchPage() {
     const genreCode = genreMap[genreKey];
     const areaCode = areaMap[locationKey];
 
-    const keywordParts = [];
+    const keywordParts: string[] = [];
     if (!genreCode) keywordParts.push(genreKey);
     if (!areaCode) keywordParts.push(locationKey);
 
@@ -215,9 +128,7 @@ export default function SearchPage() {
       body.genre = genreCode;
     }
 
-    if (areaCode) {
-      body.small_area = areaCode;
-    }
+    // small_area（駅コード）は送らず、フロント側の AND フィルターで判定
 
     return body;
   };
@@ -225,18 +136,27 @@ export default function SearchPage() {
   const fetchData = async (keyword: string) => {
     if (!keyword.trim()) return;
 
+    // URLの場合は個別店舗ページへ遷移
     const id = extractHotpepperIdFromUrl(keyword.trim());
     if (id) {
       router.push(`/shop/${id}`);
       return;
     }
 
+    // 🔍 入力されたキーワードを解析して body を作成
+    const searchBody = {
+      ...buildSearchBody(keyword),
+      count: 30, // 最大30件取得
+    };
+
+    console.log("📦 送信Body:", searchBody);
+
     const res = await fetch("/api/hotpepper", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(buildSearchBody(searchWord)),
+      body: JSON.stringify(searchBody),
     });
 
     if (!res.ok) {
@@ -244,36 +164,18 @@ export default function SearchPage() {
       return;
     }
 
-    const text = await res.text();
+    const data = await res.json();
+    const shops: any[] = Array.isArray(data) ? data : [];
 
-    if (!text) {
-      console.error("⚠️ 空のレスポンスでした！");
-      return;
-    }
-
-    const data = JSON.parse(text);
-
-    const parts = searchWord.trim().split(/\s+/);
-    const genreKey = parts[0];
-    const locationKey = parts[1] || "";
-
-    const filteredResults = (data.results?.shop || []).filter((shop: any) => {
-      const nameAndAddress = `${shop.name} ${shop.small_area.name}`;
-      return (
-        nameAndAddress.includes(genreKey) ||
-        nameAndAddress.includes(locationKey)
-      );
-    });
-
-    setHotpepperResults(filteredResults);
+    console.log("ショップ数:", shops.length);
+    console.log("🧪 検索結果:", shops);
+    setRecommendedShops(shops.slice(0, 12));
   };
 
   useEffect(() => {
     if (searchWord.trim() === "") return;
     fetchData(searchWord);
   }, [searchWord]);
-
-  const dummyImages = Array(30).fill("https://placehold.jp/150x150.png");
 
   return (
     <div className="mx-auto flex h-screen max-w-md flex-col">
@@ -298,7 +200,7 @@ export default function SearchPage() {
               fetchData(searchWord);
               router.push(`/result?keyword=${encodeURIComponent(searchWord)}`);
             }}
-            className="w-17 items-center rounded-lg bg-gray-500 px-2 py-2 text-sm font-semibold text-white"
+            className="w-17 items-center rounded-lg bg-gray-500 px-2 py-2 text-sm font-semibold text-white active:bg-gray-600"
           >
             検索
           </button>
@@ -309,39 +211,30 @@ export default function SearchPage() {
               おすすめのお店
             </h2>
             <div className="grid grid-cols-3 gap-px bg-gray-300">
-              {recommendedShops.map((shop) => (
-                <Link
-                  href={shop.urls.pc}
-                  key={shop.id}
-                  className="bg-white p-2"
-                >
-                  <img
-                    src={shop.photo?.pc?.l}
-                    alt={shop.name}
-                    className="aspect-square w-full object-cover"
-                  />
-                  <div className="mt-1 truncate text-sm font-bold">
-                    {shop.name}
+              {recommendedShops.map((shop) => {
+                console.log("🖼️ 表示対象のshop:", shop);
+                return (
+                  <div key={shop.id} className="bg-white p-2">
+                    <Image
+                      src={getSafeLogoImage(shop)}
+                      alt={shop.name || "お店"}
+                      width={96}
+                      height={96}
+                      unoptimized
+                      className="aspect-square w-full object-cover"
+                    />
+                    <div className="mt-1 truncate text-sm font-bold">
+                      {shop.name || "名前不明"}
+                    </div>
+                    <div className="truncate text-xs text-gray-500">
+                      {shop.genre?.name || "ジャンル不明"}
+                    </div>
                   </div>
-                  <div className="truncate text-xs text-gray-500">
-                    {shop.genre.name}
-                  </div>
-                </Link>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
-        <div className="grid grid-cols-3 gap-px bg-gray-300">
-          {hotpepperResults.map((shop) => (
-            <Link href={shop.urls.pc} key={shop.id} className="bg-white">
-              <img
-                src={shop.photo.pc.l || "https://placehold.jp/150x150.png"}
-                alt={shop.name}
-                className="aspect-square w-full object-cover"
-              />
-            </Link>
-          ))}
-        </div>
       </main>
       <Tab />
     </div>
