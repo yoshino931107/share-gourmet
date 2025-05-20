@@ -6,11 +6,11 @@ export default function Tab() {
   const pathname = usePathname();
   return (
     <>
-      <footer className="position-sticky relative grid grid-cols-4 bg-transparent text-center text-gray-700">
+      <footer className="position-sticky relative grid grid-cols-4 bg-transparent text-center text-orange-950">
         <div className="relative flex h-20 items-end transition-transform duration-200">
           <Link
             href="/share"
-            className={`flex h-20 w-full flex-col items-center rounded-t-xl border border-gray-500 p-2 shadow-[0_-4px_6px_rgba(145,145,145,0.2)] transition-all duration-200 ${
+            className={`flex h-20 w-full flex-col items-center rounded-t-xl border border-orange-950 p-2 shadow-[0_-4px_6px_rgba(145,145,145,0.2)] transition-all duration-200 ${
               pathname === "/share"
                 ? "z-10 translate-y-[-8px] bg-gradient-to-b from-orange-300 via-orange-400 to-orange-500"
                 : "bg-gradient-to-b from-orange-100 via-orange-200 to-orange-300"
@@ -28,7 +28,7 @@ export default function Tab() {
         <div className="relative flex h-20 items-end transition-transform duration-200">
           <Link
             href="/map"
-            className={`flex h-20 w-full flex-col items-center rounded-t-xl border border-gray-500 p-2 shadow-[0_-4px_6px_rgba(145,145,145,0.2)] transition-all duration-200 ${
+            className={`flex h-20 w-full flex-col items-center rounded-t-xl border border-orange-950 p-2 shadow-[0_-4px_6px_rgba(145,145,145,0.2)] transition-all duration-200 ${
               pathname === "/map"
                 ? "z-10 translate-y-[-8px] bg-gradient-to-b from-orange-300 via-orange-400 to-orange-500"
                 : "bg-gradient-to-b from-orange-50 via-orange-100 to-orange-200"
@@ -41,7 +41,7 @@ export default function Tab() {
         <div className="relative flex h-20 items-end transition-transform duration-200">
           <Link
             href="/search"
-            className={`flex h-20 w-full flex-col items-center rounded-t-xl border border-gray-500 p-2 shadow-[0_-4px_6px_rgba(145,145,145,0.2)] transition-all duration-200 ${
+            className={`flex h-20 w-full flex-col items-center rounded-t-xl border border-orange-950 p-2 shadow-[0_-4px_6px_rgba(145,145,145,0.2)] transition-all duration-200 ${
               pathname === "/search"
                 ? "z-10 translate-y-[-8px] bg-gradient-to-b from-orange-300 via-orange-400 to-orange-500"
                 : "bg-gradient-to-b from-orange-100 via-orange-200 to-orange-300"
@@ -59,7 +59,7 @@ export default function Tab() {
         <div className="relative flex h-20 items-end transition-transform duration-200">
           <Link
             href="/mypage"
-            className={`flex h-20 w-full flex-col items-center rounded-t-xl border border-gray-500 p-2 shadow-[0_-4px_6px_rgba(145,145,145,0.2)] transition-all duration-200 ${
+            className={`flex h-20 w-full flex-col items-center rounded-t-xl border border-orange-950 p-2 shadow-[0_-4px_6px_rgba(145,145,145,0.2)] transition-all duration-200 ${
               pathname === "/mypage"
                 ? "z-10 translate-y-[-8px] bg-gradient-to-b from-orange-300 via-orange-400 to-orange-500"
                 : "bg-gradient-to-b from-orange-50 via-orange-100 to-orange-200"

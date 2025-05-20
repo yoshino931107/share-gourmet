@@ -1,7 +1,23 @@
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  const { keyword, genre, small_area } = await req.json();
+  let keyword = "";
+  let genre = "";
+  let small_area = "";
+  let id = "";
+
+  try {
+    const body = await req.json();
+    keyword = body.keyword || "";
+    genre = body.genre || "";
+    small_area = body.small_area || "";
+    id = body.id || "";
+  } catch (error) {
+    console.error("🔥 リクエストボディの解析に失敗しました:", error);
+  }
+
+  console.log("🛑 API HIT!");
+  console.log("📦 受け取ったパラメータ:", { keyword, genre, small_area });
 
   const apiKey =
     process.env.HOTPEPPER_API_KEY || process.env.NEXT_PUBLIC_HOTPEPPER_API_KEY;
@@ -14,7 +30,8 @@ export async function POST(req: Request) {
 
   const url =
     `https://webservice.recruit.co.jp/hotpepper/gourmet/v1/?key=${apiKey}` +
-    `&keyword=${encodeURIComponent(keyword)}` +
+    (id ? `&id=${id}` : "") + // ←追加！
+    (keyword ? `&keyword=${encodeURIComponent(keyword)}` : "") +
     (genre ? `&genre=${genre}` : "") +
     (small_area ? `&small_area=${small_area}` : "") +
     `&count=30&format=json`;
@@ -33,7 +50,13 @@ export async function POST(req: Request) {
   }
 
   if (!res.ok) {
-    const errorData = await res.json();
+    let errorData;
+    try {
+      errorData = await res.json();
+    } catch (err) {
+      errorData = { message: "レスポンスJSONパース失敗" };
+    }
+
     console.error("🔥 Hotpepper fetch failed:", res.status, errorData);
     return NextResponse.json(
       { error: "APIリクエストに失敗しました", details: errorData },
@@ -42,7 +65,7 @@ export async function POST(req: Request) {
   }
 
   const data = await res.json();
-  const keywordLower = keyword.toLowerCase();
+  const keywordLower = typeof keyword === "string" ? keyword.toLowerCase() : "";
   const shops = data.results?.shop || [];
 
   // let filtered = [];
@@ -68,21 +91,26 @@ export async function POST(req: Request) {
   try {
     const minimalShops = filtered.map((shop: any) => {
       const imageUrl =
-        shop.photo?.mobile?.l ||
-        shop.photo?.mobile?.s ||
-        shop.photo?.pc?.l ||
-        shop.photo?.pc?.m ||
-        shop.logo_image ||
-        "https://placehold.jp/150x150.png";
+        [
+          shop.photo?.pc?.l,
+          shop.photo?.pc?.m,
+          shop.photo?.mobile?.l,
+          shop.photo?.mobile?.s,
+          shop.logo_image,
+        ].find((url) => typeof url === "string" && url.includes("hotp.jp")) ||
+        null;
+      ("https://placehold.jp/150x150.png");
       console.log("🖼️ imageUrl:", imageUrl);
+
       return {
         id: shop.id,
         name: shop.name,
-        image: imageUrl,
+        image_url: imageUrl,
         genre: shop.genre?.name,
         address: shop.address,
         station: shop.station_name,
         budget: shop.budget?.average,
+        middle_area: shop.middle_area?.name,
       };
     });
 

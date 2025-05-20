@@ -23,16 +23,19 @@ export default function SearchPage() {
   // HotPepper 画像URLを安全に取得
   const getSafeLogoImage = (shop: any) => {
     const photoUrl =
+      shop.image_url || // Supabase に保存された URL
       shop.image || // API で整形済み
-      shop.photo?.pc?.l ||
-      shop.photo?.pc?.m ||
-      shop.photo?.pc?.s ||
-      shop.logo_image;
+      shop?.photo?.pc?.l ||
+      shop?.photo?.pc?.m ||
+      shop?.photo?.pc?.s ||
+      shop?.logo_image;
 
     if (!photoUrl || photoUrl.includes("noimage.jpg")) {
       return "https://placehold.jp/150x150.png";
     }
-    return photoUrl.replace("http://", "https://");
+    return photoUrl.startsWith("http")
+      ? photoUrl.replace("http://", "https://")
+      : photoUrl;
   };
 
   const router = useRouter();
@@ -179,7 +182,6 @@ export default function SearchPage() {
 
   return (
     <div className="mx-auto flex h-screen max-w-md flex-col">
-      <Header />
       <main className="flex-1 overflow-y-auto bg-gray-50 p-2">
         <div className="mt-2 mr-1.5 mb-5 ml-1.5 flex items-center rounded-xl border border-gray-300 bg-white px-1 py-1">
           <MagnifyingGlassIcon className="mr-2 h-7 w-5 text-gray-400" />

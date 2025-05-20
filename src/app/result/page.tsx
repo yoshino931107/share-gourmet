@@ -2,12 +2,15 @@
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import Header from "@/components/ui/header";
 import Tab from "@/components/ui/tab";
+import { supabase } from "@/utils/supabase/supabase";
+import { useRouter } from "next/navigation";
 
 const ResultPage = () => {
+  // ★ 仮のグループ ID（後でドロップダウンで選択した値などに置き換える）
+  const dummyGroupId = "11111111-1111-1111-1111-111111111111";
   const [shops, setShops] = useState<any[]>([]);
+  const router = useRouter(); // ←追加
 
   // 画像 URL を安全に取得するユーティリティ
   const getSafeLogoImage = (shop: any) => {
@@ -15,12 +18,12 @@ const ResultPage = () => {
       shop.photo?.pc?.l ||
       shop.photo?.pc?.m ||
       shop.photo?.pc?.s ||
-      shop.logo_image;
+      shop.logo_image ||
+      shop.image_url; // ← ここでsupabaseに保存されているものも考慮
 
     if (!photoUrl || photoUrl.includes("noimage.jpg")) {
       return "https://placehold.jp/150x150.png";
     }
-
     return photoUrl.replace("http://", "https://");
   };
 
@@ -76,10 +79,39 @@ const ResultPage = () => {
     // });
   };
 
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  const handleClickAndNavigate = async (shop: any) => {
+    if (isNavigating) return; // ← すでに遷移中なら無視！
+    setIsNavigating(true); // ← 遷移開始！
+
+    // TODO: dummyGroupId を実際に選択されたグループ ID に置き換える
+    try {
+      const { error } = await supabase.from("shared_shops").upsert(
+        {
+          hotpepper_id: shop.id,
+          group_id: dummyGroupId, // ← 複合 UNIQUE に含まれる列も同時に保存
+          name: shop.name,
+          address: shop.address,
+          image_url: getSafeLogoImage(shop),
+        },
+        { onConflict: "hotpepper_id,group_id" }, // ← 複合 UNIQUE キーを文字列で指定
+      );
+
+      if (error) {
+        console.error("🔥 upsert error:", error);
+      } else {
+        console.log("✅ 保存成功:", shop.id);
+      }
+    } catch (e) {
+      console.error("🚨 upsert exception:", e);
+    }
+
+    router.push(`/detail/${shop.id}`);
+  };
+
   return (
     <div className="mx-auto flex h-screen max-w-md flex-col">
-      <Header />
-
       {/* --- scrollable content area --- */}
       <div className="flex-1 overflow-y-auto p-4">
         <h1 className="mb-4 text-xl font-bold">検索結果</h1>
@@ -88,23 +120,20 @@ const ResultPage = () => {
         ) : (
           <div>
             <main className="grid grid-cols-1 gap-4">
-              {shops.map((shop) => {
+              {shops.map((shop, index) => {
+                console.log(`🔍 shop[${index}]:`, shop);
                 console.log("🖼️ logo_image:", shop.logo_image);
                 // console.log("🖼️ photo?.pc?.l:", shop.photo?.pc?.l);
                 // console.log("🖼️ 画像URL:", getSafeLogoImage(shop));
                 return (
-                  <Link
+                  <div
                     key={shop.id}
-                    href={`/detail/${shop.id}`}
-                    className="block rounded-md border bg-white p-4 shadow-sm hover:bg-gray-50"
+                    onClick={() => handleClickAndNavigate(shop)}
+                    className="block cursor-pointer rounded-md border bg-white p-4 shadow-sm hover:bg-gray-50"
                   >
                     <div className="flex">
                       <Image
-                        src={
-                          shop.image
-                            ? shop.image.replace("http://", "https://")
-                            : "https://placehold.jp/150x150.png"
-                        }
+                        src={getSafeLogoImage(shop)}
                         alt={shop.name}
                         width={96}
                         height={96}
@@ -126,7 +155,7 @@ const ResultPage = () => {
                         </p>
                       </div>
                     </div>
-                  </Link>
+                  </div>
                 );
               })}
             </main>

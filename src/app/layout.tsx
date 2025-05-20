@@ -1,5 +1,8 @@
-import type { Metadata } from "next";
+"use client";
 import "./globals.css";
+import Header from "@/components/ui/header";
+import { SessionContextProvider } from "@supabase/auth-helpers-react";
+import { supabase } from "@/utils/supabase/supabase";
 
 import { M_PLUS_Rounded_1c } from "next/font/google";
 import { cn } from "@/lib/utils";
@@ -11,27 +14,19 @@ const rounded = M_PLUS_Rounded_1c({
   variable: "--font-rounded",
 });
 
-export const metadata: Metadata = {
-  title: "シェアグル",
-  description: "気になるグルメ、シェア＆ストック！",
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja" className={rounded.variable}>
-      <body
-        className={cn(
-          "bg-background min-h-screen font-sans antialiased",
-          "flex flex-col items-center justify-center",
-          "bg-neutral-200",
-        )}
-      >
-        {children}
-      </body>
-    </html>
+    <SessionContextProvider supabaseClient={supabase}>
+      <Header className="fixed top-0 right-0 left-0 z-20" />
+      <html lang="ja" className={rounded.variable}>
+        <body className={cn("min-h-screen bg-white font-sans antialiased")}>
+          {children}
+        </body>
+      </html>
+    </SessionContextProvider>
   );
 }
