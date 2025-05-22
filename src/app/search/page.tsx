@@ -175,10 +175,11 @@ export default function SearchPage() {
     setRecommendedShops(shops.slice(0, 12));
   };
 
-  useEffect(() => {
-    if (searchWord.trim() === "") return;
-    fetchData(searchWord);
-  }, [searchWord]);
+  // 検索ワードによるおすすめ店舗の再取得を防ぐため、searchWordを依存配列から除外
+  // useEffect(() => {
+  //   if (searchWord.trim() === "") return;
+  //   fetchData(searchWord);
+  // }, [searchWord]);
 
   return (
     <div className="mx-auto flex h-screen max-w-md flex-col">
@@ -216,22 +217,24 @@ export default function SearchPage() {
               {recommendedShops.map((shop) => {
                 console.log("🖼️ 表示対象のshop:", shop);
                 return (
-                  <div key={shop.id} className="bg-white p-2">
-                    <Image
-                      src={getSafeLogoImage(shop)}
-                      alt={shop.name || "お店"}
-                      width={96}
-                      height={96}
-                      unoptimized
-                      className="aspect-square w-full object-cover"
-                    />
-                    <div className="mt-1 truncate text-sm font-bold">
-                      {shop.name || "名前不明"}
+                  <Link href={`/detail/${shop.id}`} key={shop.id}>
+                    <div className="bg-white p-2">
+                      <Image
+                        src={getSafeLogoImage(shop)}
+                        alt={shop.name || "お店"}
+                        width={96}
+                        height={96}
+                        unoptimized
+                        className="aspect-square w-full object-cover"
+                      />
+                      <div className="mt-1 truncate text-sm font-bold">
+                        {shop.name || "名前不明"}
+                      </div>
+                      <div className="truncate text-xs text-gray-500">
+                        {shop.genre?.name || "ジャンル不明"}
+                      </div>
                     </div>
-                    <div className="truncate text-xs text-gray-500">
-                      {shop.genre?.name || "ジャンル不明"}
-                    </div>
-                  </div>
+                  </Link>
                 );
               })}
             </div>

@@ -5,6 +5,7 @@ import { useRef } from "react";
 import Tab from "@/components/ui/tab";
 import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useSearchParams } from "next/navigation";
 
 const fallbackImage =
   "https://images.unsplash.com/photo-1555992336-c47a0c5141a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80";
@@ -13,22 +14,22 @@ export default function Home() {
   const router = useRouter();
   const supabase = createClientComponentClient();
 
-  const [sharedShops, setSharedShops] = useState<any[]>([]);
-  const [groups, setGroups] = useState<any[]>([]); // ←★ ここ追加
+  const searchParams = useSearchParams();
+  const groupIdFromQuery = searchParams.get("group");
+
   const [selectedGroupId, setSelectedGroupId] = useState<string | undefined>(
     undefined,
   );
 
-  useEffect(() => {
-    console.log("groups:", groups);
-    if (groups.length > 0 && !selectedGroupId) {
-      setSelectedGroupId(groups[0].id);
-    }
-  }, [groups, selectedGroupId]);
+  const [sharedShops, setSharedShops] = useState<any[]>([]);
+  const [groups, setGroups] = useState<any[]>([]);
 
-  if (!selectedGroupId) {
-    return <div>ローディング...</div>;
-  }
+  // グループ取得後に初期値を決める
+  useEffect(() => {
+    if (groups.length > 0) {
+      setSelectedGroupId(groupIdFromQuery ?? groups[0].id);
+    }
+  }, [groups, groupIdFromQuery]);
 
   useEffect(() => {
     const fetchGroups = async () => {
@@ -179,7 +180,7 @@ export default function Home() {
           }
 
           const label =
-            groups.find((g) => g.id === t.group_id)?.label ??
+            groups.find((g) => g.id === t.group_id)?.name ??
             t.group?.name ??
             "未分類";
 
@@ -252,58 +253,70 @@ export default function Home() {
 
   return (
     <div className="mx-auto flex h-screen max-w-md flex-col">
-      {/* Group filter tabs */}
-      <div className="flex justify-around border-t border-b bg-white px-4 py-2">
-        {groups.map(({ id, label }) => (
-          <button
-            key={id}
-            onClick={() => setSelectedGroupId(id)}
-            className={`text-base font-semibold transition ${
-              selectedGroupId === id
-                ? "border-b-2 border-orange-400 text-orange-400"
-                : "text-gray-500 hover:text-orange-400"
-            }`}
-          >
-            {group.name}
-          </button>
-        ))}
-      </div>
-
-      {/* ---- スクロールエリア（リストのみ） ---- */}
-      <main className="flex-1 overflow-y-auto bg-gray-50 p-2">
-        {filteredShops.length === 0 ? (
-          <p className="p-4 text-center text-sm text-gray-400">
-            まだシェアされたお店はありません
-          </p>
-        ) : (
-          <div className="grid grid-cols-3 gap-px bg-gray-300">
-            {filteredShops.map((shop) => {
-              console.log("🖼️ shop.image_url:", shop.image_url);
-
-              return (
-                <Link href={`/share-detail/${shop.id}`} key={shop.hotpepper_id}>
-                  <div className="cursor-pointer border border-gray-300 bg-white p-1 transition hover:opacity-80">
-                    <img
-                      src={shop?.image_url || fallbackImage}
-                      alt={shop?.name ?? "no image"}
-                      className="aspect-square w-full object-cover"
-                    />
-                    <p className="mt-1 truncate text-sm font-bold">
-                      {shop.name}
-                    </p>
-                    <p className="truncate text-xs text-gray-500">
-                      {apiShopInfo[shop.hotpepper_id]?.genre || "ジャンル不明"}
-                      <br />
-                      {apiShopInfo[shop.hotpepper_id]?.middle_area ||
-                        "エリア不明"}
-                    </p>
-                  </div>
-                </Link>
-              );
-            })}
+      {!selectedGroupId ? (
+        <div className="flex flex-1 items-center justify-center text-gray-400">
+          loading...
+        </div>
+      ) : (
+        <>
+          {/* Group filter tabs */}
+          <div className="flex justify-around border-t border-b bg-white px-4 py-2">
+            {groups.map(({ id, name }) => (
+              <button
+                key={id}
+                onClick={() => setSelectedGroupId(id)}
+                className={`text-base font-semibold transition ${
+                  selectedGroupId === id
+                    ? "border-b-2 border-orange-400 text-orange-400"
+                    : "text-gray-500 hover:text-orange-400"
+                }`}
+              >
+                {name}
+              </button>
+            ))}
           </div>
-        )}
-      </main>
+
+          {/* ---- スクロールエリア（リストのみ） ---- */}
+          <main className="flex-1 overflow-y-auto bg-gray-50 p-2">
+            {filteredShops.length === 0 ? (
+              <p className="p-4 text-center text-sm text-gray-400">
+                まだシェアされたお店はありません
+              </p>
+            ) : (
+              <div className="grid grid-cols-3 gap-px bg-gray-50">
+                {filteredShops.map((shop) => {
+                  console.log("🖼️ shop.image_url:", shop.image_url);
+
+                  return (
+                    <Link
+                      href={`/share-detail/${shop.id}`}
+                      key={shop.hotpepper_id}
+                    >
+                      <div className="cursor-pointer border border-gray-300 bg-white p-1 transition hover:opacity-80">
+                        <img
+                          src={shop?.image_url || fallbackImage}
+                          alt={shop?.name ?? "no image"}
+                          className="aspect-square w-full object-cover"
+                        />
+                        <p className="mt-1 truncate text-sm font-bold">
+                          {shop.name}
+                        </p>
+                        <p className="truncate text-xs text-gray-500">
+                          {apiShopInfo[shop.hotpepper_id]?.genre ||
+                            "ジャンル不明"}
+                          <br />
+                          {apiShopInfo[shop.hotpepper_id]?.middle_area ||
+                            "エリア不明"}
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </main>
+        </>
+      )}
       {/* ---- フッタータブ ---- */}
       <Tab />
     </div>

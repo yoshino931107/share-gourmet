@@ -137,7 +137,7 @@ export default function ShareDetailPage() {
                 onChange={(e) => setMemoInput(e.target.value)}
               />
               <button
-                className="mt-2 rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+                className="mt-2 mb-20 rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
                 onClick={handleSaveMemo}
                 disabled={!memoInput.trim() || !shop}
               >

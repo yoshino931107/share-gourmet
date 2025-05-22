@@ -6,7 +6,7 @@ export default function Tab() {
   const pathname = usePathname();
   return (
     <>
-      <footer className="position-sticky relative grid grid-cols-4 bg-transparent text-center text-orange-950">
+      <footer className="fixed bottom-0 left-1/2 z-30 grid w-full max-w-[420px] -translate-x-1/2 grid-cols-4 bg-transparent text-center text-orange-950">
         <div className="relative flex h-20 items-end transition-transform duration-200">
           <Link
             href="/share"

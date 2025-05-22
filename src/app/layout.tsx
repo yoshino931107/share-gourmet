@@ -16,17 +16,19 @@ const rounded = M_PLUS_Rounded_1c({
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <SessionContextProvider supabaseClient={supabase}>
-      <Header className="fixed top-0 right-0 left-0 z-20" />
-      <html lang="ja" className={rounded.variable}>
-        <body className={cn("min-h-screen bg-white font-sans antialiased")}>
-          {children}
-        </body>
-      </html>
-    </SessionContextProvider>
+    <html lang="ja" className={rounded.variable}>
+      {/* 外側グレー */}
+      <body className={cn("min-h-screen bg-gray-100 font-sans antialiased")}>
+        <SessionContextProvider supabaseClient={supabase}>
+          {/* 真ん中だけ白く＆スマホ幅に制限 */}
+          <div className="relative mx-auto min-h-screen max-w-[420px] bg-white shadow-lg">
+            <Header className="fixed top-0 left-1/2 z-20 w-full max-w-[420px] -translate-x-1/2" />
+            {children}
+          </div>
+        </SessionContextProvider>
+      </body>
+    </html>
   );
 }
