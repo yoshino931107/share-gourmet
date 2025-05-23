@@ -28,12 +28,15 @@ export default function MyPage() {
             <button className="rounded-lg border border-gray-200 bg-white py-4 text-lg font-semibold shadow">
               個人ページ（保存したお店）
             </button>
-            <button className="rounded-lg border border-gray-200 bg-white py-4 text-lg font-semibold shadow">
+            <button
+              className="rounded-lg border border-gray-200 bg-white py-4 text-lg font-semibold shadow"
+              onClick={() => router.push("/group_setting")}
+            >
               グループ管理
             </button>
             <button
               onClick={handleLogout}
-              className="mb-5 rounded-lg border border-gray-200 bg-white py-4 text-lg font-semibold shadow"
+              className="mb-4 rounded-lg border border-gray-200 bg-white py-4 text-lg font-semibold shadow"
             >
               ログアウト
             </button>

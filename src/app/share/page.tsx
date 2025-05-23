@@ -1,9 +1,10 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRef } from "react";
 import Tab from "@/components/ui/tab";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useSearchParams } from "next/navigation";
 
@@ -11,7 +12,7 @@ const fallbackImage =
   "https://images.unsplash.com/photo-1555992336-c47a0c5141a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80";
 
 export default function Home() {
-  const router = useRouter();
+  // const router = useRouter();
   const supabase = createClientComponentClient();
 
   const searchParams = useSearchParams();
@@ -39,34 +40,81 @@ export default function Home() {
 
       if (!user) return;
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("groups")
         .select("id, name")
-        .eq("user_id", user.id);
+        .or(`created_by.eq.${user.id}`);
 
       if (data) setGroups(data);
     };
 
     fetchGroups();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [apiShopInfo, setApiShopInfo] = useState<{ [id: string]: any }>({});
 
+  // ---------------------------------------------------------------------------
+  // Hotpepper API へ詳細情報を取りに行く
+  // ---------------------------------------------------------------------------
   useEffect(() => {
-    // supabaseのお店一覧（sharedShops）をループしてAPIにリクエスト
-    sharedShops.forEach(async (shop) => {
-      const res = await fetch("/api/hotpepper", {
-        method: "POST",
-        body: JSON.stringify({ id: shop.hotpepper_id }),
-        headers: { "Content-Type": "application/json" },
-      });
-      const [apiData] = await res.json();
-      setApiShopInfo((prev) => ({
-        ...prev,
-        [shop.hotpepper_id]: apiData,
-      }));
-    });
-  }, [sharedShops]);
+    // 共有されたお店が 0 件なら何もしない
+    if (sharedShops.length === 0) return;
+
+    // すでに API から取得済みのものはスキップしたいので
+    const targets = sharedShops.filter(
+      (s) => apiShopInfo[s.hotpepper_id] === undefined,
+    );
+    if (targets.length === 0) return;
+
+    const fetchDetails = async () => {
+      const updates: { [id: string]: any } = {};
+
+      // ※ for...of で順番に await する
+      for (const shop of targets) {
+        try {
+          const res = await fetch("/api/hotpepper", {
+            method: "POST",
+            body: JSON.stringify({ id: shop.hotpepper_id }),
+            headers: { "Content-Type": "application/json" },
+          });
+
+          if (!res.ok) {
+            console.warn(
+              "⚠️ Hotpepper API 失敗:",
+              shop.hotpepper_id,
+              res.status,
+            );
+            continue;
+          }
+
+          // --- レスポンスが空だと res.json() で Error になるので先にテキストで確認 ---
+          const raw = await res.text();
+          if (!raw) {
+            console.warn("⚠️ 空レスポンス:", shop.hotpepper_id);
+            continue;
+          }
+
+          const [apiData] = JSON.parse(raw);
+          if (!apiData) {
+            console.warn("⚠️ パース結果が空:", shop.hotpepper_id);
+            continue;
+          }
+
+          updates[shop.hotpepper_id] = apiData;
+        } catch (e) {
+          console.error("❌ fetch 例外:", shop.hotpepper_id, e);
+        }
+      }
+
+      // state へまとめて反映
+      if (Object.keys(updates).length > 0) {
+        setApiShopInfo((prev) => ({ ...prev, ...updates }));
+      }
+    };
+
+    fetchDetails();
+  }, [sharedShops, apiShopInfo]);
 
   useEffect(() => {
     console.log("🧩 sharedShops が変化:", sharedShops);
@@ -98,14 +146,16 @@ export default function Home() {
 
       console.log(user.id);
 
-      const { data, error } = await supabase
+      // const groupIds = groups.map(g => g.id);
+
+      const { data } = await supabase
         .from("shared_shops")
         .select(
-          "id, hotpepper_id, name, genre, image_url, group_id, group:groups(name), created_at",
+          "id, hotpepper_id, name, genre, image_url, group_id, group:groups(name)",
         )
-        .eq("user_id", user.id)
+        // .eq("user_id", user.id)
         .not("hotpepper_id", "is", null)
-        .order("created_at", { ascending: false });
+        .order("id", { ascending: false });
 
       console.log("取得データ", data);
 
@@ -126,6 +176,7 @@ export default function Home() {
     };
 
     fetchSharedShops();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [shops, setShops] = useState([]);
@@ -155,8 +206,8 @@ export default function Home() {
         try {
           const res = await fetch("/api/hotpepper", {
             method: "POST",
+            body: JSON.stringify({ id: t.hotpepper_id }), // ←ここ
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: t.hotpepper_id }),
           });
 
           if (!res.ok) {
@@ -164,8 +215,14 @@ export default function Home() {
             continue;
           }
 
-          const json = await res.json();
+          const json: any = await res.json();
           if (!json) continue;
+
+          const apiData = Array.isArray(json) ? json[0] : json;
+          setApiShopInfo((prev) => ({
+            ...prev,
+            [t.hotpepper_id]: apiData,
+          }));
 
           console.log("🔍 json.name:", json.name);
           console.log("🔍 t.name (from Supabase):", t.name);
@@ -187,13 +244,13 @@ export default function Home() {
           fetched.push({
             id: t.id, // ← 追加 (UUID)
             hotpepper_id: t.hotpepper_id,
-            name: t.name ?? json.name ?? "名称不明",
-            genre: json.genre,
-            address: json.address,
-            photo: json.photo,
+            name: t.name ?? apiData.name ?? "名称不明",
+            genre: apiData.genre,
+            address: apiData.address,
+            photo: apiData.photo,
             image_url:
-              t.image_url ?? json.image_url ?? json.photo?.pc?.l ?? null,
-            urls: json.urls,
+              t.image_url ?? apiData.image_url ?? apiData.photo?.pc?.l ?? null,
+            urls: apiData.urls,
             groupId: t.group_id,
             groupLabel: label,
           });
@@ -206,15 +263,16 @@ export default function Home() {
       fetched.forEach((f) => cacheRef.current.set(f.hotpepper_id, f));
       setShops(Array.from(cacheRef.current.values()));
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sharedShops]);
 
-  const handleShare = async (shop: any | null) => {
-    if (!shop) {
-      console.warn("⚠️ handleShare に null が渡りました");
-      return;
-    }
-    console.log("🔔 share =>", shop.id, shop.name);
-  };
+  //  const handleShare = async (shop: any | null) => {
+  //    if (!shop) {
+  //      console.warn("⚠️ handleShare に null が渡りました");
+  //      return;
+  //    }
+  //    console.log("🔔 share =>", shop.id, shop.name);
+  //  };
 
   // useEffect(() => {
   //   const checkAuth = async () => {
@@ -227,8 +285,6 @@ export default function Home() {
   //   };
   //   checkAuth();
   // }, []);
-
-  const dummyImages = Array(30).fill("https://placehold.jp/120x120.png");
 
   const filteredShops = shops.filter(
     (shop) => shop.groupId === selectedGroupId,
@@ -293,10 +349,13 @@ export default function Home() {
                       key={shop.hotpepper_id}
                     >
                       <div className="cursor-pointer border border-gray-300 bg-white p-1 transition hover:opacity-80">
-                        <img
+                        <Image
                           src={shop?.image_url || fallbackImage}
                           alt={shop?.name ?? "no image"}
+                          width={300} // 必須（好みでOK）
+                          height={300} // 必須（好みでOK）
                           className="aspect-square w-full object-cover"
+                          unoptimized // ← 外部URLをそのまま使う場合はこれがあると安全
                         />
                         <p className="mt-1 truncate text-sm font-bold">
                           {shop.name}

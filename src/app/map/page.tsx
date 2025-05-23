@@ -29,7 +29,7 @@ export default function MapPage() {
 
       if (!user) return;
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("groups")
         .select("id, name")
         .eq("user_id", user.id);
@@ -38,13 +38,14 @@ export default function MapPage() {
     };
 
     fetchGroups();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (!selectedGroupId) return;
 
     const fetchSharedShops = async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("shared_shops")
         .select("*")
         .eq("group_id", selectedGroupId);
@@ -53,6 +54,7 @@ export default function MapPage() {
     };
 
     fetchSharedShops();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedGroupId]);
 
   return (
