@@ -252,10 +252,11 @@ export default function DetailPage() {
 
   const shop = shops[0];
 
+  // shopがundefinedでないことを確認してから処理する
   const displayGenre =
-    typeof shop.genre === "object"
+    shop && typeof shop.genre === "object"
       ? (shop.genre?.name ?? "ジャンル不明")
-      : (shop.genre ?? "ジャンル不明");
+      : (shop?.genre ?? "ジャンル不明");
 
   console.log("🟢 shop詳細:", shops[0]);
   console.log("APIのshop:", shop); // shop.genreやshop.budgetを確認
@@ -296,7 +297,9 @@ export default function DetailPage() {
               <h2 className="mt-4 text-xl font-semibold">{shops[0].name}</h2>
               <p className="mt-1">
                 <span className="font-medium">ジャンル：</span>
-                {displayGenre}
+                {typeof displayGenre === "string"
+                  ? displayGenre
+                  : (displayGenre?.name ?? "ジャンル不明")}
               </p>
               <p>
                 <span className="font-medium">ディナー予算：</span>

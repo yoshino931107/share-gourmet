@@ -2,6 +2,7 @@
 import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import Header from "@/components/ui/Header";
 import Tab from "@/components/ui/Tab"; // Tabのパスはプロジェクトに合わせて調整してください
 
 interface Shop {
@@ -45,6 +46,7 @@ export default function PrivateClient({
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <div className="mx-auto flex h-screen max-w-md flex-col">
+        <Header />
         {!selectedGroupId ? (
           <div className="flex flex-1 items-center justify-center text-gray-400">
             loading...

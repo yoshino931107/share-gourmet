@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Header from "@/components/ui/Header";
 import Tab from "@/components/ui/Tab";
 
 import type { Database } from "@/utils/supabase/database.types";
@@ -70,6 +71,7 @@ export default function GroupSettingPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-100">
+      <Header />
       <main className="flex-1 px-4 py-8">
         <div className="mx-auto mt-5 max-w-xs rounded-lg border bg-white p-6 shadow">
           <h2 className="mt-3 mb-5 text-center text-2xl font-bold">

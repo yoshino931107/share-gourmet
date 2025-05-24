@@ -2,6 +2,7 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createBrowserSupabaseClient } from "@supabase/auth-helpers-nextjs";
+import Header from "@/components/ui/Header";
 import Tab from "@/components/ui/Tab";
 import Image from "next/image";
 
@@ -99,6 +100,7 @@ export default function ShareDetailPage() {
 
   return (
     <>
+      <Header />
       <div className="p-4">
         <h1 className="text-xl font-bold">お店の詳細ページ</h1>
         {shop ? (

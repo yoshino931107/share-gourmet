@@ -59,83 +59,62 @@ export default function ShareClient() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-
       if (!user) return;
 
+      // ここを groups テーブルから取得に修正！
       const { data } = await supabase
-        .from("shared_shops")
-        .select(
-          "id, hotpepper_id, name, genre, address, image_url, group_id, group:groups(name)",
-        )
-        .or(`created_by.eq.${user.id}`);
+        .from("groups")
+        .select("id, name")
+        .eq("user_id", user.id); // 必要ならuser_idで絞る
+      console.log("🔥 groups data", data);
 
       if (data) setGroups(data);
     };
 
     fetchGroups();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [apiShopInfo, setApiShopInfo] = useState<{
     [id: string]: HotPepperShop;
   }>({});
 
-  // ---------------------------------------------------------------------------
-  // Hotpepper API へ詳細情報を取りに行く
-  // ---------------------------------------------------------------------------
+  // 1. Hotpepper API へ詳細情報をまとめて一括で取りに行く
   useEffect(() => {
     if (sharedShops.length === 0) return;
 
-    const targets = sharedShops.filter(
-      (s) => apiShopInfo[s.hotpepper_id] === undefined,
-    );
-    if (targets.length === 0) return;
+    // 未取得のIDだけ抽出
+    const hotpepperIds = sharedShops
+      .map((s) => s.hotpepper_id)
+      .filter((id) => !apiShopInfo[id]);
+    if (hotpepperIds.length === 0) return;
 
-    const fetchDetails = async () => {
-      const updates: { [id: string]: HotPepperShop } = {};
+    const fetchBulkDetails = async () => {
+      try {
+        // 配列で一括fetch
+        const res = await fetch("/api/hotpepper", {
+          method: "POST",
+          body: JSON.stringify({ ids: hotpepperIds }), // ←複数IDで
+          headers: { "Content-Type": "application/json" },
+        });
 
-      for (const shop of targets) {
-        try {
-          const res = await fetch("/api/hotpepper", {
-            method: "POST",
-            body: JSON.stringify({ id: shop.hotpepper_id }),
-            headers: { "Content-Type": "application/json" },
-          });
-
-          if (!res.ok) {
-            console.warn(
-              "⚠️ Hotpepper API 失敗:",
-              shop.hotpepper_id,
-              res.status,
-            );
-            continue;
-          }
-
-          const raw = await res.text();
-          if (!raw) {
-            console.warn("⚠️ 空レスポンス:", shop.hotpepper_id);
-            continue;
-          }
-
-          const [apiData] = JSON.parse(raw);
-          if (!apiData) {
-            console.warn("⚠️ パース結果が空:", shop.hotpepper_id);
-            continue;
-          }
-
-          updates[shop.hotpepper_id] = apiData;
-        } catch (e) {
-          console.error("❌ fetch 例外:", shop.hotpepper_id, e);
+        if (!res.ok) {
+          console.warn("⚠️ Hotpepper API 一括失敗:", res.status);
+          return;
         }
-      }
 
-      if (Object.keys(updates).length > 0) {
-        setApiShopInfo((prev) => ({ ...prev, ...updates }));
+        const result = await res.json();
+        // resultは { [hotpepper_id]: apiData } の形を想定
+        if (!result || typeof result !== "object") return;
+
+        setApiShopInfo((prev) => ({ ...prev, ...result }));
+      } catch (error) {
+        console.error("❌ Hotpepper API 一括エラー:", error);
       }
     };
 
-    fetchDetails();
-  }, [sharedShops, apiShopInfo]);
+    fetchBulkDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sharedShops]);
 
   useEffect(() => {
     console.log("🧩 sharedShops が変化:", sharedShops);
@@ -284,6 +263,8 @@ export default function ShareClient() {
     console.log("🔍 filteredShops", filteredShops);
     console.log("🔍 selectedGroupId", selectedGroupId);
   }, [filteredShops, selectedGroupId]);
+
+  console.log(groups, sharedShops, selectedGroupId);
 
   return (
     <div className="mx-auto flex h-screen max-w-md flex-col">

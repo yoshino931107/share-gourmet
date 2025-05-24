@@ -1,4 +1,5 @@
 "use client";
+import Header from "@/components/ui/Header";
 import Tab from "@/components/ui/Tab";
 import { MapContent } from "@/components/ui/Map";
 import { useEffect, useState } from "react";
@@ -88,6 +89,7 @@ export default function MapPage() {
 
   return (
     <div className="mx-auto flex h-screen max-w-md flex-col bg-white">
+      <Header />
       {/* グループ切り替えタブ */}
       <div className="flex justify-around border-b bg-white px-4 py-2">
         {groups.map(({ id, name }) => (

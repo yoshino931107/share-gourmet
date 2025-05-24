@@ -1,31 +1,49 @@
+import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+
 // Supabase service‑role client for server‑side inserts / upserts
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
-import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 
-interface HotPepperShop {
-  id: string;
-  name: string;
-  photo?: {
-    pc?: { l?: string; m?: string };
-    mobile?: { l?: string; s?: string };
+export interface Photo {
+  pc?: {
+    l?: string;
+    m?: string;
+    s?: string;
   };
+  mobile?: {
+    l?: string;
+    s?: string;
+  };
+}
+
+// API返却・アプリ全体で共通利用する「お店データ型」
+export interface HotPepperShop {
+  id: string;
+  hotpepper_id: string;
+  name: string;
+  image_url: string | null;
+  genre: string | { name: string; code: string } | null;
+  genre_code: string | { name: string; code: string } | null;
+  address: string | null;
+  station: string | null;
+  budget: string | { name: string; code: string } | null;
+  budget_name: string | { name: string; code: string } | null;
+  budget_code: string | { name: string; code: string } | null;
+  middle_area: string | { name: string } | null;
+  latitude: string | null;
+  longitude: string | null;
+  lat?: string | null;
+  lng?: string | null;
+  station_name?: string | null;
+  photo?: Photo;
   logo_image?: string;
-  lat?: string;
-  lng?: string;
-  address?: string;
-  station_name?: string;
-  genre?: { name?: string; code?: string };
-  budget?: { average?: string; name?: string; code?: string };
-  lunch?: { average?: string };
-  middle_area?: { name?: string };
-  // 必要に応じてプロパティ追加！
 }
 
 export async function POST(req: Request) {
+  let ids: string[] = [];
   let keyword = "";
   let genre = "";
   let small_area = "";
@@ -33,6 +51,7 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
+    ids = body.ids || [];
     keyword = body.keyword || "";
     genre = body.genre || "";
     small_area = body.small_area || "";
@@ -50,9 +69,76 @@ export async function POST(req: Request) {
     );
   }
 
+  // 複数IDでまとめて取得するロジック
+  if (Array.isArray(ids) && ids.length > 0) {
+    const results: Record<string, HotPepperShop> = {};
+    for (const hotpepperId of ids) {
+      const url = `https://webservice.recruit.co.jp/hotpepper/gourmet/v1/?key=${apiKey}&id=${hotpepperId}&format=json`;
+      try {
+        const res = await fetch(url);
+        if (!res.ok) continue;
+        const data = await res.json();
+        const shop = data.results?.shop?.[0];
+        if (!shop) continue;
+
+        const imageUrl =
+          [
+            shop.photo?.pc?.l,
+            shop.photo?.pc?.m,
+            shop.photo?.mobile?.l,
+            shop.photo?.mobile?.s,
+            shop.logo_image,
+          ].find(
+            (url: string) => typeof url === "string" && url.includes("hotp.jp"),
+          ) || null;
+
+        const latitude = shop.lat ? parseFloat(shop.lat) : null;
+        const longitude = shop.lng ? parseFloat(shop.lng) : null;
+
+        // Supabase upsert: hotpepper_id がキー
+        await supabase.from("shared_shops").upsert(
+          {
+            hotpepper_id: shop.id,
+            name: shop.name,
+            latitude,
+            longitude,
+            genre: shop.genre?.name ?? null,
+            genre_code: shop.genre?.code ?? null,
+            budget: shop.budget?.average ?? null,
+            budget_name: shop.budget?.name ?? null,
+            budget_code: shop.budget?.code ?? null,
+          },
+          { onConflict: "hotpepper_id" },
+        );
+
+        results[hotpepperId] = {
+          hotpepper_id: shop.id,
+          id: shop.id,
+          name: shop.name,
+          image_url: imageUrl,
+          genre: shop.genre?.name,
+          genre_code: shop.genre?.code,
+          address: shop.address,
+          station: shop.station_name,
+          budget: shop.budget?.average,
+          budget_name: shop.budget?.name,
+          budget_code: shop.budget?.code,
+          middle_area: shop.middle_area?.name,
+          latitude: shop.lat ?? null,
+          longitude: shop.lng ?? null,
+        };
+      } catch (e) {
+        console.warn("🔥 ID単体取得エラー:", hotpepperId, e);
+        continue;
+      }
+    }
+    return NextResponse.json(results, { status: 200 });
+  }
+
+  // （従来通りの単体検索: id, keyword, genre, small_area）
   const url =
     `https://webservice.recruit.co.jp/hotpepper/gourmet/v1/?key=${apiKey}` +
-    (id ? `&id=${id}` : "") + // ←追加！
+    (id ? `&id=${id}` : "") +
     (keyword ? `&keyword=${encodeURIComponent(keyword)}` : "") +
     (genre ? `&genre=${genre}` : "") +
     (small_area ? `&small_area=${small_area}` : "") +
@@ -85,27 +171,8 @@ export async function POST(req: Request) {
   }
 
   const data = await res.json();
-  // Removed unused variable 'keywordLower'
   const shops = data.results?.shop || [];
-
-  // let filtered = [];
-  // try {
-  //   filtered = shops.filter((shop: HotPepperShop) => {
-  //     const combined =
-  //       `${shop?.name || ""} ${shop?.genre?.name || ""} ${shop?.address || ""} ${shop?.station_name || ""} ${shop?.catch || ""}`.toLowerCase();
-  //     return keywordLower.split(/\s+/).some((kw) => combined.includes(kw));
-  //   });
-
-  //   console.log("📦 Filtered results count:", filtered.length);
-  // } catch (err) {
-  //   console.error("🔥 フィルター処理中にエラーが発生しました:", err);
-  //   return NextResponse.json(
-  //     { error: "フィルター処理中にエラーが発生しました" },
-  //     { status: 500 },
-  //   );
-  // }
-
-  const filtered = shops; // フィルター処理をスキップ
+  const filtered = shops;
 
   try {
     const minimalShops = await Promise.all(
@@ -117,35 +184,40 @@ export async function POST(req: Request) {
             shop.photo?.mobile?.l,
             shop.photo?.mobile?.s,
             shop.logo_image,
-          ].find((url) => typeof url === "string" && url.includes("hotp.jp")) ||
-          null;
-
-        // const latRaw = shop.lat ?? shop.latitude ?? "";
-        // const lngRaw = shop.lng ?? shop.longitude ?? "";
+          ].find(
+            (url: string | undefined) =>
+              typeof url === "string" && url.includes("hotp.jp"),
+          ) || null;
 
         const latitude = shop.lat ? parseFloat(shop.lat) : null;
         const longitude = shop.lng ? parseFloat(shop.lng) : null;
 
-        // center 決定
-        // const first = shops.find(
-        //   (s) => Number.isFinite(s.latitude) && Number.isFinite(s.longitude),
-        // );
-        // const center = first
-        //   ? { lat: first.latitude, lng: first.longitude }
-        //   : { lat: 35.681236, lng: 139.767125 }; // ←東京駅などデフォルト
-
-        // === Supabase upsert: hotpepper_id がキー ===
         await supabase.from("shared_shops").upsert(
           {
             hotpepper_id: shop.id,
             name: shop.name,
             latitude,
             longitude,
-            genre: shop.genre?.name ?? null, // ジャンル名
-            genre_code: shop.genre?.code ?? null, // ジャンルコード
-            budget: shop.budget?.average ?? null, // 平均予算（ディナー中心）
-            budget_name: shop.budget?.name ?? null, // 予算名
-            budget_code: shop.budget?.code ?? null, // 予算コード
+            genre:
+              typeof shop.genre === "object" && shop.genre !== null
+                ? shop.genre.name
+                : (shop.genre ?? null),
+            genre_code:
+              typeof shop.genre === "object" && shop.genre !== null
+                ? shop.genre.code
+                : null,
+            budget:
+              typeof shop.budget === "object" && shop.budget !== null
+                ? shop.budget.name
+                : (shop.budget ?? null),
+            budget_name:
+              typeof shop.budget === "object" && shop.budget !== null
+                ? shop.budget.name
+                : null,
+            budget_code:
+              typeof shop.budget === "object" && shop.budget !== null
+                ? shop.budget.code
+                : null,
           },
           { onConflict: "hotpepper_id" },
         );
@@ -154,16 +226,32 @@ export async function POST(req: Request) {
           id: shop.id,
           name: shop.name,
           image_url: imageUrl,
-          genre: shop.genre?.name, // ← ジャンル名（従来通り）
-          genre_code: shop.genre?.code, // ← ジャンルコードも必要なら
+          genre:
+            typeof shop.genre === "object" && shop.genre !== null
+              ? shop.genre.name
+              : (shop.genre ?? null),
+          genre_code:
+            typeof shop.genre === "object" && shop.genre !== null
+              ? shop.genre.code
+              : null,
           address: shop.address,
           station: shop.station_name,
-          // ▼ ここから追加（予算系）
-          budget: shop.budget?.average, // ← 平均予算（ディナー中心）
-          budget_name: shop.budget?.name, // ← 予算ジャンル名
-          budget_code: shop.budget?.code, // ← 予算コード
-          lunch: shop.lunch?.average, // ← ランチ予算（ここ重要！）
-          middle_area: shop.middle_area?.name,
+          budget:
+            typeof shop.budget === "object" && shop.budget !== null
+              ? shop.budget.name
+              : (shop.budget ?? null),
+          budget_name:
+            typeof shop.budget === "object" && shop.budget !== null
+              ? shop.budget.name
+              : (shop.budget ?? null),
+          budget_code:
+            typeof shop.budget === "object" && shop.budget !== null
+              ? shop.budget.code
+              : null,
+          middle_area:
+            typeof shop.middle_area === "object" && shop.middle_area !== null
+              ? shop.middle_area.name
+              : (shop.middle_area ?? null),
           latitude,
           longitude,
         };

@@ -1,7 +1,7 @@
 "use client";
-
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import Header from "@/components/ui/Header";
 import Tab from "@/components/ui/Tab";
 import { supabase } from "@/utils/supabase/supabase";
 import { useRouter } from "next/navigation";
@@ -130,7 +130,7 @@ const ResultPage = () => {
 
   return (
     <div className="mx-auto flex h-screen max-w-md flex-col">
-      {/* --- scrollable content area --- */}
+      <Header />
       <div className="flex-1 overflow-y-auto p-4">
         <h1 className="mb-4 text-xl font-bold">検索結果</h1>
         {shops.length === 0 ? (
