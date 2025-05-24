@@ -6,6 +6,21 @@ export type Json =
   | { [key: string]: Json }
   | Json[];
 
+export type HotPepperShop = {
+  id?: string;
+  user_id: string;
+  hotpepper_id: string;
+  name: string;
+  image_url: string;
+  shop_url: string;
+  address: string;
+  genre: string;
+  group_id: string;
+  latitude: number | null;
+  longitude: number | null;
+  budget: string | null;
+};
+
 export type SharedShop = {
   id?: string;
   user_id: string;
@@ -16,9 +31,9 @@ export type SharedShop = {
   address: string;
   genre: string;
   group_id: string;
-  latitude: number;
-  longitude: number;
-  budget: string;
+  latitude: number | null;
+  longitude: number | null;
+  budget: string | null;
 };
 
 export type Group = {

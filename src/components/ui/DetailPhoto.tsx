@@ -1,6 +1,11 @@
 import Image from "next/image";
 
-const DetailPhoto = (props) => {
+type DetailPhotoProps = {
+  src: string;
+  alt: string;
+};
+
+const DetailPhoto = (props: DetailPhotoProps) => {
   return (
     <Image
       src={props.src}

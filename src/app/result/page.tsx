@@ -2,11 +2,12 @@
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import Tab from "@/components/ui/tab";
+import Tab from "@/components/ui/Tab";
 import { supabase } from "@/utils/supabase/supabase";
 import { useRouter } from "next/navigation";
 
 interface HotPepperShop {
+  id: string;
   hotpepper_id: string;
   name: string;
   address: string;
@@ -16,7 +17,12 @@ interface HotPepperShop {
   photo?: {
     pc?: { l?: string; m?: string; s?: string };
     mobile?: { l?: string; s?: string };
+    logo_image?: string;
   };
+  logo_image?: string;
+  station?: string;
+  catch?: string;
+  small_area?: string;
 }
 
 const ResultPage = () => {
@@ -155,15 +161,8 @@ const ResultPage = () => {
                       <div className="flex-1">
                         <h2 className="text-lg font-semibold">{shop.name}</h2>
                         <p className="text-sm text-gray-600">
-                          ⭐ {shop.rating || "4.0"}（食べログ評価）
-                        </p>
-                        <p className="text-sm text-gray-600">
                           {shop.station || "駅"} /{" "}
                           {shop.genre || "ジャンル不明"}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          ¥{shop.budget?.average || "0,000"}〜¥
-                          {shop.budget?.average || "0,000"}円
                         </p>
                       </div>
                     </div>

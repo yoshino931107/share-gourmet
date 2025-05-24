@@ -3,7 +3,7 @@
 "use client";
 import { supabase } from "@/utils/supabase/supabase";
 import { useRouter } from "next/navigation";
-import Tab from "@/components/ui/tab";
+import Tab from "@/components/ui/Tab";
 
 export default function MyPage() {
   const router = useRouter();

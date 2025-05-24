@@ -1,13 +1,19 @@
 "use client";
 import { useState, useEffect } from "react";
-import Tab from "@/components/ui/tab";
+import Tab from "@/components/ui/Tab";
+
+import type { Database } from "@/utils/supabase/database.types";
+type GroupRow = Pick<
+  Database["public"]["Tables"]["groups"]["Row"],
+  "id" | "name"
+>;
 import { supabase } from "@/utils/supabase/supabase";
 
 export default function GroupSettingPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
-  const [groups, setGroups] = useState([]);
+  const [groups, setGroups] = useState<GroupRow[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState("");
   const [inviteUrl, setInviteUrl] = useState("");
 

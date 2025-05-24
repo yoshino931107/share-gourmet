@@ -1,18 +1,22 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import Tab from "@/components/ui/tab";
-// import { useRouter } from "next/navigation";
+import Tab from "@/components/ui/Tab";
+import { useRouter } from "next/navigation";
 // import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 
 interface HotPepperShop {
+  id: string;
   hotpepper_id: string;
   name: string;
   address: string;
   genre?: string;
   budget?: string;
   image_url?: string;
+  image: string;
+  logo_image?: string;
+  keyword?: string;
   photo?: {
     pc?: { l?: string; m?: string; s?: string };
     mobile?: { l?: string; s?: string };
@@ -30,25 +34,29 @@ export default function SearchPage() {
 
   // const [hotpepperResults, setHotpepperResults] = useState([]);
 
-  const [recommendedShops, setRecommendedShops] = useState([]);
+  const router = useRouter();
+
+  const [recommendedShops, setRecommendedShops] = useState<HotPepperShop[]>([]);
+
+  const [searchWord, setSearchWord] = useState("");
 
   // HotPepper 画像URLを安全に取得
-  // const getSafeLogoImage = (shop: HotPepperShop) => {
-  //  const photoUrl =
-  //    shop.image_url || // Supabase に保存された URL
-  //    shop.image || // API で整形済み
-  //    shop?.photo?.pc?.l ||
-  //    shop?.photo?.pc?.m ||
-  //    shop?.photo?.pc?.s ||
-  //    shop?.logo_image;
-  //
-  //  if (!photoUrl || photoUrl.includes("noimage.jpg")) {
-  //    return "https://placehold.jp/150x150.png";
-  //  }
-  //  return photoUrl.startsWith("http")
-  //    ? photoUrl.replace("http://", "https://")
-  //    : photoUrl;
-  // };
+  const getSafeLogoImage = (shop: HotPepperShop) => {
+    const photoUrl =
+      shop.image_url ||
+      shop.image ||
+      shop?.photo?.pc?.l ||
+      shop?.photo?.pc?.m ||
+      shop?.photo?.pc?.s ||
+      shop?.logo_image;
+
+    if (!photoUrl || photoUrl.includes("noimage.jpg")) {
+      return "https://placehold.jp/150x150.png";
+    }
+    return photoUrl.startsWith("http")
+      ? photoUrl.replace("http://", "https://")
+      : photoUrl;
+  };
 
   // const router = useRouter();
   // const supabase = createClientComponentClient();
@@ -83,42 +91,32 @@ export default function SearchPage() {
   }, []);
 
   // ジャンル名→ジャンルコード変換マップ
-  // const genreMap: { [key: string]: string } = {
-  //    カフェ: "G014",
-  //    居酒屋: "G001",
-  //    和食: "G004",
-  //    洋食: "G005",
-  //    中華: "G006",
-  //    焼肉: "G008",
-  //    韓国料理: "G017",
-  //    イタリアン: "G006",
-  //    フレンチ: "G007",
-  //    バー: "G002",
-  //    ベーカリー: "G016",
-  //    ヘルシー: "G012",
-  //  };
+  const genreMap: { [key: string]: string } = {
+    カフェ: "G014",
+    居酒屋: "G001",
+    和食: "G004",
+    洋食: "G005",
+    中華: "G006",
+    焼肉: "G008",
+    韓国料理: "G017",
+    イタリアン: "G006",
+    フレンチ: "G007",
+    バー: "G002",
+    ベーカリー: "G016",
+    ヘルシー: "G012",
+  };
+
   // エリア名 → small_area コード変換マップ
-  // const areaMap: { [key: string]: string } = {
-  //    渋谷: "Z011",
-  //    新宿: "Z002",
-  //    池袋: "Z003",
-  //    表参道: "Z014",
-  //    吉祥寺: "Z006",
-  //    原宿: "Z012",
-  //    恵比寿: "Z010",
-  //    中目黒: "Z013",
-  //  };
-  // small_area コード → エリア名 逆引きマップ
-  // const areaNameMap: { [key: string]: string } = {
-  //  Z011: "渋谷",
-  //  Z002: "新宿",
-  //  Z003: "池袋",
-  //  Z014: "表参道",
-  //  Z006: "吉祥寺",
-  //  Z012: "原宿",
-  //  Z010: "恵比寿",
-  //  Z013: "中目黒",
-  // };
+  const areaMap: { [key: string]: string } = {
+    渋谷: "Z011",
+    新宿: "Z002",
+    池袋: "Z003",
+    表参道: "Z014",
+    吉祥寺: "Z006",
+    原宿: "Z012",
+    恵比寿: "Z010",
+    中目黒: "Z013",
+  };
 
   const buildSearchBody = (search: string) => {
     const parts = search.trim().split(/\s+/);
@@ -133,7 +131,12 @@ export default function SearchPage() {
     if (!areaCode) keywordParts.push(locationKey);
 
     const body: HotPepperShop = {
+      id: "",
+      hotpepper_id: "",
+      name: "",
+      address: "",
       keyword: keywordParts.join(" "),
+      image: "",
     };
 
     if (genreCode) {
@@ -220,8 +223,6 @@ export default function SearchPage() {
             </h2>
             <div className="grid grid-cols-3 gap-px bg-gray-300">
               {recommendedShops.map((shop) => {
-                // 🔍 DEBUG: 遷移する hotpepper_id を確認
-                console.log("▶︎ navigateTo detail id:", shop.id);
                 return (
                   <Link
                     href={`/detail/${shop.id}`}
@@ -241,7 +242,7 @@ export default function SearchPage() {
                         {shop.name || "名前不明"}
                       </div>
                       <div className="truncate text-xs text-gray-500">
-                        {shop.genre?.name || "ジャンル不明"}
+                        {shop.genre || "ジャンル不明"}
                       </div>
                     </div>
                   </Link>

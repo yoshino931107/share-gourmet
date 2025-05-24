@@ -4,9 +4,11 @@ import { APIProvider } from "@vis.gl/react-google-maps";
 
 type Shop = {
   id: string;
+  hotpepper_id: string;
   name: string;
   latitude: number;
   longitude: number;
+  image_url?: string;
 };
 
 export const MapContent = ({ shops = [] }: { shops: Shop[] }) => {
@@ -16,12 +18,19 @@ export const MapContent = ({ shops = [] }: { shops: Shop[] }) => {
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
 
   useEffect(() => {
-    if (!mapContainerRef.current) return;
-
     const loadMap = async () => {
-      const { Map } = await google.maps.importLibrary("maps");
-      const { Marker } = await google.maps.importLibrary("marker");
-      const { InfoWindow } = await google.maps.importLibrary("maps");
+      if (!mapContainerRef.current) return;
+
+      const mapsLib = (await google.maps.importLibrary(
+        "maps",
+      )) as google.maps.MapsLibrary;
+      const markerLib = (await google.maps.importLibrary(
+        "marker",
+      )) as google.maps.MarkerLibrary;
+
+      const Map = mapsLib.Map;
+      const InfoWindow = mapsLib.InfoWindow;
+      const Marker = markerLib.Marker;
 
       const center = { lat: 35.656, lng: 139.737 };
       const zoom = 15;

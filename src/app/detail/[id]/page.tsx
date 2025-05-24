@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import Header from "@/components/ui/Header";
 import { Dialog } from "@headlessui/react";
 import { supabase } from "@/utils/supabase/supabase";
 import type { Database } from "@/utils/supabase/database.types";
@@ -113,6 +114,15 @@ export default function DetailPage() {
       typeof shop.genre === "object"
         ? (shop.genre?.name ?? "ジャンル不明")
         : (shop.genre ?? "ジャンル不明");
+
+    const normalizeBudget = (
+      b: BudgetType | string | null | undefined,
+    ): string | null => {
+      if (b == null) return null; // undefined / null → null
+      if (typeof b === "object") return b.name ?? null; // { name: "..."} → name だけ
+      return b; // すでに string
+    };
+
     const payload: SharedShopInsert = {
       user_id: user.id,
       hotpepper_id: shop.hotpepper_id,
@@ -125,7 +135,7 @@ export default function DetailPage() {
       longitude: shop.longitude ?? null,
       image_url,
       genre: upsertGenre,
-      budget: shop.budget ?? null,
+      budget: normalizeBudget(shop.budget),
     };
 
     const { error: upsertError } = await supabase
@@ -173,6 +183,13 @@ export default function DetailPage() {
       // 🔍 呼び出し直前に id を確認
       console.log("🛫 id を持って API へ:", hotpepperId);
 
+      // ────────────────────────────────
+      // 現在ログイン中のユーザーを取得（shops に user_id を入れるため）
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      // ────────────────────────────────
+
       const hp = await fetch("/api/hotpepper", {
         method: "POST",
         body: JSON.stringify({ id: hotpepperId }),
@@ -202,17 +219,22 @@ export default function DetailPage() {
             : fallbackImage;
 
         console.log("🔥 hp.results.shop:", shopsArray);
-        console.log("✅ APIで見つかったお店情報:", shop);
+        console.log("✅ APIで見つかったお店情報:", s);
 
         setShops([
           {
             hotpepper_id: s.id,
+            user_id: user?.id ?? "", // <= ★ ここで user?.id を安全に参照
+            group_id: selectedGroupId ?? "",
             name: s.name,
             address: s.address,
             genre: genreName,
             budget: budgetName,
             image_url: imageUrl,
-            photo: s.photo, // ← 後で使うなら残す
+            latitude: s.latitude ?? null,
+            longitude: s.longitude ?? null,
+            shop_url: s.shop_url ?? "",
+            photo: s.photo,
           },
         ]);
 
@@ -230,11 +252,17 @@ export default function DetailPage() {
 
   const shop = shops[0];
 
+  const displayGenre =
+    typeof shop.genre === "object"
+      ? (shop.genre?.name ?? "ジャンル不明")
+      : (shop.genre ?? "ジャンル不明");
+
   console.log("🟢 shop詳細:", shops[0]);
   console.log("APIのshop:", shop); // shop.genreやshop.budgetを確認
 
   return (
     <>
+      <Header />
       <div className="mx-auto max-w-md pt-[0px] pb-[110px]">
         {loading ? (
           <p className="align-items center flex">読み込み中...</p>
@@ -257,7 +285,7 @@ export default function DetailPage() {
               return (
                 <Image
                   src={displayUrl}
-                  alt={shops[0].name}
+                  alt={shops[0]?.name ?? "お店の画像"}
                   width={400}
                   height={400}
                   className="aspect-square w-full rounded object-cover"
@@ -268,11 +296,22 @@ export default function DetailPage() {
               <h2 className="mt-4 text-xl font-semibold">{shops[0].name}</h2>
               <p className="mt-1">
                 <span className="font-medium">ジャンル：</span>
-                {shop.genre}
+                {displayGenre}
               </p>
               <p>
                 <span className="font-medium">ディナー予算：</span>
-                {shop.budget}
+                {(() => {
+                  // BudgetType | string | undefined を ⇒ string に変換
+                  if (shop.budget == null) return "情報なし";
+
+                  // BudgetType オブジェクトだった場合は name を採用
+                  if (typeof shop.budget === "object") {
+                    return shop.budget.name ?? "情報なし";
+                  }
+
+                  // すでに string 型ならそのまま
+                  return shop.budget;
+                })()}
               </p>
               <p className="mb-30 text-sm text-gray-600">{shops[0].address}</p>
               <div className="mt-6"></div>

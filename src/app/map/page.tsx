@@ -1,11 +1,12 @@
 "use client";
-import Tab from "@/components/ui/tab";
+import Tab from "@/components/ui/Tab";
 import { MapContent } from "@/components/ui/Map";
 import { useEffect, useState } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 interface HotPepperShop {
   hotpepper_id: string;
+  id: string;
   name: string;
   address: string;
   genre?: string;
@@ -15,10 +16,17 @@ interface HotPepperShop {
     pc?: { l?: string; m?: string; s?: string };
     mobile?: { l?: string; s?: string };
   };
+  latitude: number | null;
+  longitude: number | null;
+}
+
+interface Group {
+  id: string;
+  name: string;
 }
 
 export default function MapPage() {
-  const [groups, setGroups] = useState<HotPepperShop[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [sharedShops, setSharedShops] = useState<HotPepperShop[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<string | undefined>(
     undefined,
@@ -70,6 +78,14 @@ export default function MapPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedGroupId]);
 
+  <MapContent
+    shops={sharedShops.map((shop) => ({
+      ...shop,
+      latitude: shop.latitude ?? 0, // 0などデフォルト値
+      longitude: shop.longitude ?? 0,
+    }))}
+  />;
+
   return (
     <div className="mx-auto flex h-screen max-w-md flex-col bg-white">
       {/* グループ切り替えタブ */}
@@ -91,7 +107,13 @@ export default function MapPage() {
       {/* Map表示エリア（今は仮のMapContentでOK！） */}
       <main className="flex-1 overflow-y-auto bg-gray-50 p-2">
         <div className="h-full rounded-xl shadow">
-          <MapContent shops={sharedShops} />
+          <MapContent
+            shops={sharedShops.map((shop) => ({
+              ...shop,
+              latitude: shop.latitude ?? 0,
+              longitude: shop.longitude ?? 0,
+            }))}
+          />
         </div>
       </main>
       <Tab />

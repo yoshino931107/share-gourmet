@@ -2,16 +2,19 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createBrowserSupabaseClient } from "@supabase/auth-helpers-nextjs";
-import Tab from "@/components/ui/tab";
+import Tab from "@/components/ui/Tab";
 import Image from "next/image";
 
 interface HotPepperShop {
+  id: string;
   hotpepper_id: string;
   name: string;
   address: string;
   genre?: string;
   budget?: string;
   image_url?: string;
+  content?: string;
+  created_at?: string;
   photo?: {
     pc?: { l?: string; m?: string; s?: string };
     mobile?: { l?: string; s?: string };
@@ -25,7 +28,7 @@ export default function ShareDetailPage() {
 
   console.log("params.id", id);
 
-  const [shop, setShop] = useState<HotPepperShop>(null);
+  const [shop, setShop] = useState<HotPepperShop | null>(null);
   const [memoInput, setMemoInput] = useState("");
   const [memos, setMemos] = useState<HotPepperShop[]>([]);
   const [loadingMemos, setLoadingMemos] = useState(true);
@@ -101,7 +104,7 @@ export default function ShareDetailPage() {
         {shop ? (
           <div className="mt-4 space-y-2">
             <Image
-              src={shop.image_url}
+              src={shop.image_url ?? "/noimage.png"}
               alt={shop.name}
               width={400}
               height={400}
