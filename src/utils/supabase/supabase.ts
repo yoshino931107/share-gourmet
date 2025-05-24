@@ -1,4 +1,6 @@
 import { createBrowserSupabaseClient } from "@supabase/auth-helpers-nextjs";
-import { Database } from "../supabase";
+import type { Database } from "./database.types";
 
 export const supabase = createBrowserSupabaseClient<Database>();
+
+type SharedShopInsert = Database["public"]["Tables"]["shared_shops"]["Insert"];

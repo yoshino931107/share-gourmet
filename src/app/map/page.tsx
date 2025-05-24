@@ -4,9 +4,22 @@ import { MapContent } from "@/components/ui/Map";
 import { useEffect, useState } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
+interface HotPepperShop {
+  hotpepper_id: string;
+  name: string;
+  address: string;
+  genre?: string;
+  budget?: string;
+  image_url?: string;
+  photo?: {
+    pc?: { l?: string; m?: string; s?: string };
+    mobile?: { l?: string; s?: string };
+  };
+}
+
 export default function MapPage() {
-  const [groups, setGroups] = useState<any[]>([]);
-  const [sharedShops, setSharedShops] = useState<any[]>([]);
+  const [groups, setGroups] = useState<HotPepperShop[]>([]);
+  const [sharedShops, setSharedShops] = useState<HotPepperShop[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<string | undefined>(
     undefined,
   );

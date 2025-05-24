@@ -4,13 +4,43 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Dialog } from "@headlessui/react";
 import { supabase } from "@/utils/supabase/supabase";
-import Tab from "@/components/ui/tab";
+import type { Database } from "@/utils/supabase/database.types";
+import Tab from "@/components/ui/Tab";
 import { useParams } from "next/navigation";
 import {
   BookmarkIcon,
   HeartIcon,
   CalendarDaysIcon,
 } from "@heroicons/react/24/solid";
+
+type PhotoType = {
+  pc?: { l?: string; m?: string; s?: string };
+  mobile?: { l?: string; s?: string };
+};
+type BudgetType = {
+  code?: string;
+  name?: string;
+  average?: string;
+};
+// 型エラー対策: genre は string型または { name?: string } 型も許容する
+type HotPepperShop = {
+  user_id: string;
+  hotpepper_id: string;
+  group_id: string;
+  name?: string;
+  address?: string;
+  // 修正ポイント: genreはstringまたは{name?: string}型も許容
+  genre?: string | { name?: string };
+  image_url?: string;
+  shop_url?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  // photo等は他の箇所で使われている場合があるので省略しない
+  photo?: PhotoType;
+  budget?: BudgetType;
+};
+
+type SharedShopInsert = Database["public"]["Tables"]["shared_shops"]["Insert"];
 
 export default function DetailPage() {
   // ────────────────────────────────────────────────
@@ -19,7 +49,11 @@ export default function DetailPage() {
 
   // 画像 URL を決定するヘルパー
   // l → m → s → logo_image → フォールバック の順に探して返す
-  const pickImageUrl = (p: any, logo: string | null, fallback: string) => {
+  const pickImageUrl = (
+    p: HotPepperShop["photo"] | undefined,
+    logo: string | null,
+    fallback: string,
+  ) => {
     if (p?.pc?.l && p.pc.l !== "") return p.pc.l;
     if (p?.pc?.m && p.pc.m !== "") return p.pc.m;
     if (p?.pc?.s && p.pc.s !== "") return p.pc.s;
@@ -27,7 +61,7 @@ export default function DetailPage() {
     return fallback;
   };
   // ────────────────────────────────────────────────
-  const [shops, setShops] = useState<any[]>([]);
+  const [shops, setShops] = useState<HotPepperShop[]>([]);
   const [loading, setLoading] = useState(true);
   const [groups, setGroups] = useState<{ id: string; label: string }[]>([]);
   const params = useParams();
@@ -67,11 +101,6 @@ export default function DetailPage() {
       return;
     }
 
-    // const genre =
-    //   typeof shop.genre === "object" && shop.genre?.name
-    //     ? shop.genre.name
-    //     : (shop.genre ?? "ジャンル不明");
-
     const image_url =
       shop.photo && shop.photo.pc?.l
         ? shop.photo.pc.l
@@ -80,18 +109,30 @@ export default function DetailPage() {
           : "https://placehold.jp/150x150.png";
 
     // upsert
-    const { error: upsertError } = await supabase.from("shared_shops").upsert(
-      {
-        user_id: user.id,
-        hotpepper_id: shop.hotpepper_id,
-        group_id: selectedGroupId,
-        name: shop.name,
-        address: shop.address,
-        genre: shop.genre?.name ?? "ジャンル不明",
-        image_url: image_url,
-      },
-      { onConflict: ["hotpepper_id", "group_id"] },
-    );
+    const upsertGenre =
+      typeof shop.genre === "object"
+        ? (shop.genre?.name ?? "ジャンル不明")
+        : (shop.genre ?? "ジャンル不明");
+    const payload: SharedShopInsert = {
+      user_id: user.id,
+      hotpepper_id: shop.hotpepper_id,
+      group_id: selectedGroupId,
+      // 追加 ↓
+      name: shop.name ?? "名称不明",
+      address: shop.address ?? "",
+      shop_url: shop.shop_url ?? "",
+      latitude: shop.latitude ?? null,
+      longitude: shop.longitude ?? null,
+      image_url,
+      genre: upsertGenre,
+      budget: shop.budget ?? null,
+    };
+
+    const { error: upsertError } = await supabase
+      .from("shared_shops")
+      .upsert([payload], {
+        onConflict: "hotpepper_id,group_id",
+      });
 
     if (upsertError) {
       console.error("シェア保存失敗:", upsertError);

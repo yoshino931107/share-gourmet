@@ -6,6 +6,25 @@ const supabase = createClient(
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+interface HotPepperShop {
+  id: string;
+  name: string;
+  photo?: {
+    pc?: { l?: string; m?: string };
+    mobile?: { l?: string; s?: string };
+  };
+  logo_image?: string;
+  lat?: string;
+  lng?: string;
+  address?: string;
+  station_name?: string;
+  genre?: { name?: string; code?: string };
+  budget?: { average?: string; name?: string; code?: string };
+  lunch?: { average?: string };
+  middle_area?: { name?: string };
+  // 必要に応じてプロパティ追加！
+}
+
 export async function POST(req: Request) {
   let keyword = "";
   let genre = "";
@@ -43,7 +62,6 @@ export async function POST(req: Request) {
 
   try {
     res = await fetch(url);
-    console.log("📦 受け取ったパラメータ:", { keyword, genre, small_area });
   } catch (error) {
     console.error("🔥 Fetch処理中にエラーが発生しました:", error);
     return NextResponse.json(
@@ -60,7 +78,6 @@ export async function POST(req: Request) {
       errorData = { message: "レスポンスJSONパース失敗" };
     }
 
-    console.error("🔥 Hotpepper fetch failed:", res.status, errorData);
     return NextResponse.json(
       { error: "APIリクエストに失敗しました", details: errorData },
       { status: res.status },
@@ -73,7 +90,7 @@ export async function POST(req: Request) {
 
   // let filtered = [];
   // try {
-  //   filtered = shops.filter((shop: any) => {
+  //   filtered = shops.filter((shop: HotPepperShop) => {
   //     const combined =
   //       `${shop?.name || ""} ${shop?.genre?.name || ""} ${shop?.address || ""} ${shop?.station_name || ""} ${shop?.catch || ""}`.toLowerCase();
   //     return keywordLower.split(/\s+/).some((kw) => combined.includes(kw));
@@ -89,11 +106,10 @@ export async function POST(req: Request) {
   // }
 
   const filtered = shops; // フィルター処理をスキップ
-  console.log("📦 全件返却:", filtered.length);
 
   try {
     const minimalShops = await Promise.all(
-      filtered.map(async (shop: any) => {
+      filtered.map(async (shop: HotPepperShop) => {
         const imageUrl =
           [
             shop.photo?.pc?.l,
@@ -109,8 +125,6 @@ export async function POST(req: Request) {
 
         const latitude = shop.lat ? parseFloat(shop.lat) : null;
         const longitude = shop.lng ? parseFloat(shop.lng) : null;
-
-        console.log("hotpepper lat/lng", shop.lat, shop.lng);
 
         // center 決定
         // const first = shops.find(
@@ -158,7 +172,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json(minimalShops, { status: 200 });
   } catch (error) {
-    console.error("🔥 最小データ返却時にエラーが発生しました:", error);
     return NextResponse.json(
       { error: "データ返却エラー", details: String(error) },
       { status: 500 },

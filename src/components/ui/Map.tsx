@@ -23,8 +23,8 @@ export const MapContent = ({ shops = [] }: { shops: Shop[] }) => {
       const { Marker } = await google.maps.importLibrary("marker");
       const { InfoWindow } = await google.maps.importLibrary("maps");
 
-      let center = { lat: 35.656, lng: 139.737 };
-      let zoom = 15;
+      const center = { lat: 35.656, lng: 139.737 };
+      const zoom = 15;
 
       // マップ生成（仮のcenterで）
       mapRef.current = new Map(mapContainerRef.current, {

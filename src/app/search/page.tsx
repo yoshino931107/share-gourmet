@@ -5,6 +5,19 @@ import Tab from "@/components/ui/tab";
 // import { useRouter } from "next/navigation";
 // import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
+
+interface HotPepperShop {
+  hotpepper_id: string;
+  name: string;
+  address: string;
+  genre?: string;
+  budget?: string;
+  image_url?: string;
+  photo?: {
+    pc?: { l?: string; m?: string; s?: string };
+    mobile?: { l?: string; s?: string };
+  };
+}
 import { useEffect, useState } from "react";
 
 function extractHotpepperIdFromUrl(url: string): string | null {
@@ -20,7 +33,7 @@ export default function SearchPage() {
   const [recommendedShops, setRecommendedShops] = useState([]);
 
   // HotPepper 画像URLを安全に取得
-  // const getSafeLogoImage = (shop: any) => {
+  // const getSafeLogoImage = (shop: HotPepperShop) => {
   //  const photoUrl =
   //    shop.image_url || // Supabase に保存された URL
   //    shop.image || // API で整形済み
@@ -62,11 +75,7 @@ export default function SearchPage() {
 
       const data = await res.json();
       const shops = Array.isArray(data) ? data : [];
-      console.log("ショップ数:", shops.length);
-      console.log("🧪 おすすめ店舗:", shops); // ←これ追加してみよう！
       setRecommendedShops(shops.slice(0, 12));
-      console.log("✅ fetchRecommendedShops 取得件数:", shops.length);
-      console.log("✅ fetchRecommendedShops 一件目:", shops[0]);
     };
 
     fetchRecommendedShops();
@@ -109,143 +118,140 @@ export default function SearchPage() {
   //  Z012: "原宿",
   //  Z010: "恵比寿",
   //  Z013: "中目黒",
-}
+  // };
 
-const buildSearchBody = (search: string) => {
-  const parts = search.trim().split(/\s+/);
-  const genreKey = parts[0];
-  const locationKey = parts[1] || "";
+  const buildSearchBody = (search: string) => {
+    const parts = search.trim().split(/\s+/);
+    const genreKey = parts[0];
+    const locationKey = parts[1] || "";
 
-  const genreCode = genreMap[genreKey];
-  const areaCode = areaMap[locationKey];
+    const genreCode = genreMap[genreKey];
+    const areaCode = areaMap[locationKey];
 
-  const keywordParts: string[] = [];
-  if (!genreCode) keywordParts.push(genreKey);
-  if (!areaCode) keywordParts.push(locationKey);
+    const keywordParts: string[] = [];
+    if (!genreCode) keywordParts.push(genreKey);
+    if (!areaCode) keywordParts.push(locationKey);
 
-  const body: any = {
-    keyword: keywordParts.join(" "),
+    const body: HotPepperShop = {
+      keyword: keywordParts.join(" "),
+    };
+
+    if (genreCode) {
+      body.genre = genreCode;
+    }
+
+    // small_area（駅コード）は送らず、フロント側の AND フィルターで判定
+
+    return body;
   };
 
-  if (genreCode) {
-    body.genre = genreCode;
-  }
+  const fetchData = async (keyword: string) => {
+    if (!keyword.trim()) return;
 
-  // small_area（駅コード）は送らず、フロント側の AND フィルターで判定
+    // URLの場合は個別店舗ページへ遷移
+    const id = extractHotpepperIdFromUrl(keyword.trim());
+    if (id) {
+      router.push(`/shop/${id}`);
+      return;
+    }
 
-  return body;
-};
+    // 🔍 入力されたキーワードを解析して body を作成
+    const searchBody = {
+      ...buildSearchBody(keyword),
+      count: 30, // 最大30件取得
+    };
 
-const fetchData = async (keyword: string) => {
-  if (!keyword.trim()) return;
+    const res = await fetch("/api/hotpepper", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(searchBody),
+    });
 
-  // URLの場合は個別店舗ページへ遷移
-  const id = extractHotpepperIdFromUrl(keyword.trim());
-  if (id) {
-    router.push(`/shop/${id}`);
-    return;
-  }
+    if (!res.ok) {
+      console.error("🔥 API error:", res.status);
+      return;
+    }
 
-  // 🔍 入力されたキーワードを解析して body を作成
-  const searchBody = {
-    ...buildSearchBody(keyword),
-    count: 30, // 最大30件取得
+    const data = await res.json();
+    const shops: HotPepperShop[] = Array.isArray(data) ? data : [];
+
+    setRecommendedShops(shops.slice(0, 12));
   };
 
-  console.log("📦 送信Body:", searchBody);
+  // 検索ワードによるおすすめ店舗の再取得を防ぐため、searchWordを依存配列から除外
+  // useEffect(() => {
+  //   if (searchWord.trim() === "") return;
+  //   fetchData(searchWord);
+  // }, [searchWord]);
 
-  const res = await fetch("/api/hotpepper", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(searchBody),
-  });
-
-  if (!res.ok) {
-    console.error("🔥 API error:", res.status);
-    return;
-  }
-
-  const data = await res.json();
-  const shops: any[] = Array.isArray(data) ? data : [];
-
-  console.log("ショップ数:", shops.length);
-  console.log("🧪 検索結果:", shops);
-  setRecommendedShops(shops.slice(0, 12));
-};
-
-// 検索ワードによるおすすめ店舗の再取得を防ぐため、searchWordを依存配列から除外
-// useEffect(() => {
-//   if (searchWord.trim() === "") return;
-//   fetchData(searchWord);
-// }, [searchWord]);
-
-return (
-  <div className="mx-auto flex h-screen max-w-md flex-col">
-    <main className="flex-1 overflow-y-auto bg-gray-50 p-2">
-      <div className="mt-2 mr-1.5 mb-5 ml-1.5 flex items-center rounded-xl border border-gray-300 bg-white px-1 py-1">
-        <MagnifyingGlassIcon className="mr-2 h-7 w-5 text-gray-400" />
-        <input
-          type="text"
-          placeholder="お店を検索"
-          className="w-full text-sm focus:outline-none"
-          value={searchWord}
-          onChange={(e) => setSearchWord(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              setSearchWord(e.currentTarget.value);
-            }
-          }}
-        />
-        <button
-          onClick={() => {
-            fetchData(searchWord);
-            router.push(`/result?keyword=${encodeURIComponent(searchWord)}`);
-          }}
-          className="w-17 items-center rounded-lg bg-gray-500 px-2 py-2 text-sm font-semibold text-white active:bg-gray-600"
-        >
-          検索
-        </button>
-      </div>
-      {recommendedShops.length > 0 && (
-        <div className="mb-6">
-          <h2 className="mb-2 px-2 text-sm font-semibold text-gray-700">
-            おすすめのお店
-          </h2>
-          <div className="grid grid-cols-3 gap-px bg-gray-300">
-            {recommendedShops.map((shop) => {
-              // 🔍 DEBUG: 遷移する hotpepper_id を確認
-              console.log("▶︎ navigateTo detail id:", shop.id);
-              return (
-                <Link
-                  href={`/detail/${shop.id}`}
-                  key={shop.id}
-                  onClick={() => console.log("▶︎ 遷移前 id:", shop.id)}
-                >
-                  <div className="bg-white p-2">
-                    <Image
-                      src={getSafeLogoImage(shop)}
-                      alt={shop.name || "お店"}
-                      width={96}
-                      height={96}
-                      unoptimized
-                      className="aspect-square w-full object-cover"
-                    />
-                    <div className="mt-1 truncate text-sm font-bold">
-                      {shop.name || "名前不明"}
-                    </div>
-                    <div className="truncate text-xs text-gray-500">
-                      {shop.genre?.name || "ジャンル不明"}
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+  return (
+    <div className="mx-auto flex h-screen max-w-md flex-col">
+      <main className="flex-1 overflow-y-auto bg-gray-50 p-2">
+        <div className="mt-2 mr-1.5 mb-5 ml-1.5 flex items-center rounded-xl border border-gray-300 bg-white px-1 py-1">
+          <MagnifyingGlassIcon className="mr-2 h-7 w-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="お店を検索"
+            className="w-full text-sm focus:outline-none"
+            value={searchWord}
+            onChange={(e) => setSearchWord(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                setSearchWord(e.currentTarget.value);
+              }
+            }}
+          />
+          <button
+            onClick={() => {
+              fetchData(searchWord);
+              router.push(`/result?keyword=${encodeURIComponent(searchWord)}`);
+            }}
+            className="w-17 items-center rounded-lg bg-gray-500 px-2 py-2 text-sm font-semibold text-white active:bg-gray-600"
+          >
+            検索
+          </button>
         </div>
-      )}
-    </main>
-    <Tab />
-  </div>
-);
+        {recommendedShops.length > 0 && (
+          <div className="mb-6">
+            <h2 className="mb-2 px-2 text-sm font-semibold text-gray-700">
+              おすすめのお店
+            </h2>
+            <div className="grid grid-cols-3 gap-px bg-gray-300">
+              {recommendedShops.map((shop) => {
+                // 🔍 DEBUG: 遷移する hotpepper_id を確認
+                console.log("▶︎ navigateTo detail id:", shop.id);
+                return (
+                  <Link
+                    href={`/detail/${shop.id}`}
+                    key={shop.id}
+                    onClick={() => console.log("▶︎ 遷移前 id:", shop.id)}
+                  >
+                    <div className="bg-white p-2">
+                      <Image
+                        src={getSafeLogoImage(shop)}
+                        alt={shop.name || "お店"}
+                        width={96}
+                        height={96}
+                        unoptimized
+                        className="aspect-square w-full object-cover"
+                      />
+                      <div className="mt-1 truncate text-sm font-bold">
+                        {shop.name || "名前不明"}
+                      </div>
+                      <div className="truncate text-xs text-gray-500">
+                        {shop.genre?.name || "ジャンル不明"}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </main>
+      <Tab />
+    </div>
+  );
+}

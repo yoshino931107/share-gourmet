@@ -6,14 +6,27 @@ import Tab from "@/components/ui/tab";
 import { supabase } from "@/utils/supabase/supabase";
 import { useRouter } from "next/navigation";
 
+interface HotPepperShop {
+  hotpepper_id: string;
+  name: string;
+  address: string;
+  genre?: string;
+  budget?: string;
+  image_url?: string;
+  photo?: {
+    pc?: { l?: string; m?: string; s?: string };
+    mobile?: { l?: string; s?: string };
+  };
+}
+
 const ResultPage = () => {
   // ★ 仮のグループ ID（後でドロップダウンで選択した値などに置き換える）
   const dummyGroupId = "11111111-1111-1111-1111-111111111111";
-  const [shops, setShops] = useState<any[]>([]);
+  const [shops, setShops] = useState<HotPepperShop[]>([]);
   const router = useRouter(); // ←追加
 
   // 画像 URL を安全に取得するユーティリティ
-  const getSafeLogoImage = (shop: any) => {
+  const getSafeLogoImage = (shop: HotPepperShop) => {
     const photoUrl =
       shop.photo?.pc?.l ||
       shop.photo?.pc?.m ||
@@ -31,7 +44,6 @@ const ResultPage = () => {
     const params = new URLSearchParams(window.location.search);
     const keyword = params.get("keyword") || "";
     fetchResults(keyword);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchResults = async (keyword: string) => {
@@ -52,7 +64,7 @@ const ResultPage = () => {
 
     const keywordParts = keyword.toLowerCase().split(/\s+/); // スペースで分割
 
-    let filtered = data.filter((shop: any) => {
+    let filtered = data.filter((shop: HotPepperShop) => {
       const targetText = (
         `${shop.name} ${shop.genre ?? ""} ${shop.address} ${shop.station ?? ""} ` +
         `${shop.catch ?? ""} ${shop.small_area ?? ""}`
@@ -64,7 +76,7 @@ const ResultPage = () => {
 
     // AND 条件で 3 件未満なら OR 条件で候補を追加
     if (filtered.length < 3) {
-      filtered = data.filter((shop: any) => {
+      filtered = data.filter((shop: HotPepperShop) => {
         const targetText = (
           `${shop.name} ${shop.genre ?? ""} ${shop.address} ${shop.station ?? ""} ` +
           `${shop.catch ?? ""} ${shop.small_area ?? ""}`
@@ -74,14 +86,14 @@ const ResultPage = () => {
     }
 
     setShops(filtered || []);
-    // filtered.forEach((shop: any) => {
+    // filtered.forEach((shop: HotPepperShop) => {
     //   console.log("🖼️ 画像URL:", shop.logo_image);
     // });
   };
 
   const [isNavigating, setIsNavigating] = useState(false);
 
-  const handleClickAndNavigate = async (shop: any) => {
+  const handleClickAndNavigate = async (shop: HotPepperShop) => {
     if (isNavigating) return; // ← すでに遷移中なら無視！
     setIsNavigating(true); // ← 遷移開始！
 

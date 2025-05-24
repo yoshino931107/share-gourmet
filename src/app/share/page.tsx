@@ -8,6 +8,19 @@ import Tab from "@/components/ui/tab";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useSearchParams } from "next/navigation";
 
+interface HotPepperShop {
+  hotpepper_id: string;
+  name: string;
+  address: string;
+  genre?: string;
+  budget?: string;
+  image_url?: string;
+  photo?: {
+    pc?: { l?: string; m?: string; s?: string };
+    mobile?: { l?: string; s?: string };
+  };
+}
+
 const fallbackImage =
   "https://images.unsplash.com/photo-1555992336-c47a0c5141a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80";
 
@@ -22,8 +35,8 @@ export default function Home() {
     undefined,
   );
 
-  const [sharedShops, setSharedShops] = useState<any[]>([]);
-  const [groups, setGroups] = useState<any[]>([]);
+  const [sharedShops, setSharedShops] = useState<HotPepperShop[]>([]);
+  const [groups, setGroups] = useState<HotPepperShop[]>([]);
 
   // グループ取得後に初期値を決める
   useEffect(() => {
@@ -52,7 +65,9 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const [apiShopInfo, setApiShopInfo] = useState<{ [id: string]: any }>({});
+  const [apiShopInfo, setApiShopInfo] = useState<{
+    [id: string]: HotPepperShop;
+  }>({});
 
   // ---------------------------------------------------------------------------
   // Hotpepper API へ詳細情報を取りに行く
@@ -68,7 +83,7 @@ export default function Home() {
     if (targets.length === 0) return;
 
     const fetchDetails = async () => {
-      const updates: { [id: string]: any } = {};
+      const updates: { [id: string]: HotPepperShop } = {};
 
       // ※ for...of で順番に await する
       for (const shop of targets) {
@@ -181,7 +196,7 @@ export default function Home() {
 
   const [shops, setShops] = useState([]);
 
-  const cacheRef = useRef<Map<string, any>>(new Map());
+  const cacheRef = useRef<Map<string, HotPepperShop>>(new Map());
 
   useEffect(() => {
     // 共有されたお店が無いなら何もしない
@@ -200,7 +215,7 @@ export default function Home() {
 
     // 非同期でまとめて取得
     (async () => {
-      const fetched: any[] = [];
+      const fetched: HotPepperShop[] = [];
 
       for (const t of targets) {
         try {
@@ -215,7 +230,7 @@ export default function Home() {
             continue;
           }
 
-          const json: any = await res.json();
+          const json: HotPepperShop = await res.json();
           if (!json) continue;
 
           const apiData = Array.isArray(json) ? json[0] : json;
@@ -266,7 +281,7 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sharedShops]);
 
-  //  const handleShare = async (shop: any | null) => {
+  //  const handleShare = async (shop: HotPepperShop | null) => {
   //    if (!shop) {
   //      console.warn("⚠️ handleShare に null が渡りました");
   //      return;
@@ -305,8 +320,6 @@ export default function Home() {
     console.log("🔍 selectedGroupId", selectedGroupId);
   }, [filteredShops, selectedGroupId]);
 
-  // console.log("🛠 groups JSX を描画します", groups);
-
   return (
     <div className="mx-auto flex h-screen max-w-md flex-col">
       {!selectedGroupId ? (
@@ -341,8 +354,6 @@ export default function Home() {
             ) : (
               <div className="grid grid-cols-3 gap-px bg-gray-50">
                 {filteredShops.map((shop) => {
-                  console.log("🖼️ shop.image_url:", shop.image_url);
-
                   return (
                     <Link
                       href={`/share-detail/${shop.id}`}

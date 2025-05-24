@@ -3,6 +3,20 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createBrowserSupabaseClient } from "@supabase/auth-helpers-nextjs";
 import Tab from "@/components/ui/tab";
+import Image from "next/image";
+
+interface HotPepperShop {
+  hotpepper_id: string;
+  name: string;
+  address: string;
+  genre?: string;
+  budget?: string;
+  image_url?: string;
+  photo?: {
+    pc?: { l?: string; m?: string; s?: string };
+    mobile?: { l?: string; s?: string };
+  };
+}
 
 export default function ShareDetailPage() {
   const params = useParams();
@@ -11,9 +25,9 @@ export default function ShareDetailPage() {
 
   console.log("params.id", id);
 
-  const [shop, setShop] = useState<any>(null);
+  const [shop, setShop] = useState<HotPepperShop>(null);
   const [memoInput, setMemoInput] = useState("");
-  const [memos, setMemos] = useState<any[]>([]);
+  const [memos, setMemos] = useState<HotPepperShop[]>([]);
   const [loadingMemos, setLoadingMemos] = useState(true);
 
   useEffect(() => {
@@ -86,10 +100,14 @@ export default function ShareDetailPage() {
         <h1 className="text-xl font-bold">お店の詳細ページ</h1>
         {shop ? (
           <div className="mt-4 space-y-2">
-            <img
+            <Image
               src={shop.image_url}
               alt={shop.name}
+              width={400}
+              height={400}
               className="aspect-square w-full rounded object-cover"
+              unoptimized
+              priority
             />
             <h2 className="text-lg font-semibold">{shop.name}</h2>
             <p className="text-sm text-gray-500">
