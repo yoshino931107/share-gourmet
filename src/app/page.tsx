@@ -1,5 +1,6 @@
 "use client";
 import Header from "@/components/ui/Header";
+import Link from "next/link";
 
 export default function TopPage() {
   return (
@@ -55,9 +56,11 @@ export default function TopPage() {
                 お店ごとの感想やおすすめポイントも、気になるポイントを書き残しておけるから便利！
               </li>
             </ul>
-            <button className="w-full rounded bg-gray-700 py-2 text-lg font-bold text-white shadow">
-              シェアグルを使ってみる！
-            </button>
+            <Link href="/auth/signup">
+              <button className="w-full rounded bg-gray-700 py-2 text-lg font-bold text-white shadow">
+                シェアグルを使ってみる！
+              </button>
+            </Link>
           </section>
 
           {/* 利用の流れ */}
