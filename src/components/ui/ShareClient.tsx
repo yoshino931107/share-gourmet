@@ -35,6 +35,7 @@ const fallbackImage =
   "https://images.unsplash.com/photo-1555992336-c47a0c5141a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80";
 
 export default function ShareClient() {
+  const [isLoading, setIsLoading] = useState(true);
   const supabase = createClientComponentClient();
 
   const searchParams = useSearchParams();
@@ -91,7 +92,7 @@ export default function ShareClient() {
     const fetchBulkDetails = async () => {
       try {
         // 配列で一括fetch
-        const res = await fetch("/api/hotpepper", {
+        const res = await fetch("/app/api/hotpepper", {
           method: "POST",
           body: JSON.stringify({ ids: hotpepperIds }), // ←複数IDで
           headers: { "Content-Type": "application/json" },
@@ -103,7 +104,7 @@ export default function ShareClient() {
         }
 
         const result = await res.json();
-        // resultは { [hotpepper_id]: apiData } の形を想定
+
         if (!result || typeof result !== "object") return;
 
         setApiShopInfo((prev) => ({ ...prev, ...result }));
@@ -122,15 +123,16 @@ export default function ShareClient() {
 
   useEffect(() => {
     const fetchSharedShops = async () => {
+      setIsLoading(true); // ローディング開始
+
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       if (!user) {
+        setIsLoading(false); // ユーザーなしでも読み込み終了
         return;
       }
-
-      console.log(user.id);
 
       const { data } = await supabase
         .from("shared_shops")
@@ -139,8 +141,6 @@ export default function ShareClient() {
         )
         .not("hotpepper_id", "is", null)
         .order("id", { ascending: false });
-
-      console.log("取得データ", data);
 
       const uniqueShopsMap: { [key: string]: boolean } = {};
       const uniqueShops: HotPepperShop[] = [];
@@ -158,6 +158,7 @@ export default function ShareClient() {
       } else {
         setSharedShops([]);
       }
+      setIsLoading(false); // 取得後にローディング終了
     };
     fetchSharedShops();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -291,7 +292,11 @@ export default function ShareClient() {
             ))}
           </div>
           <main className="flex-1 overflow-y-auto bg-gray-50 p-2">
-            {filteredShops.length === 0 ? (
+            {isLoading ? (
+              <p className="p-4 text-center text-sm text-gray-400">
+                お店を表示します…
+              </p>
+            ) : filteredShops.length === 0 ? (
               <p className="p-4 text-center text-sm text-gray-400">
                 まだシェアされたお店はありません
               </p>

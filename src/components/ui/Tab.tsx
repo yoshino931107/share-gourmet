@@ -1,3 +1,4 @@
+"use client";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -19,10 +20,10 @@ export default function Tab() {
             <Image
               src="/share-icon.svg"
               alt="share SVG"
-              width={48}
-              height={48}
+              width={45}
+              height={45}
             />
-            <span className="text-sm font-black">シェア</span>
+            <span className="text-xs font-black">シェア</span>
           </Link>
         </div>
         <div className="relative flex h-20 items-end transition-transform duration-200">
@@ -35,7 +36,7 @@ export default function Tab() {
             }`}
           >
             <Image src="/map-icon.svg" alt="map SVG" width={41} height={41} />
-            <span className="text-sm font-black">マップ</span>
+            <span className="text-xs font-black">マップ</span>
           </Link>
         </div>
         <div className="relative flex h-20 items-end transition-transform duration-200">
@@ -50,10 +51,10 @@ export default function Tab() {
             <Image
               src="/search-icon.svg"
               alt="search SVG"
-              width={41}
-              height={41}
+              width={38}
+              height={38}
             />
-            <span className="text-sm font-black">お店検索</span>
+            <span className="text-xs font-black">お店検索</span>
           </Link>
         </div>
         <div className="relative flex h-20 items-end transition-transform duration-200">
@@ -68,10 +69,10 @@ export default function Tab() {
             <Image
               src="/mypage-icon.svg"
               alt="mypage SVG"
-              width={41}
-              height={41}
+              width={38}
+              height={38}
             />
-            <span className="text-sm font-black">マイページ</span>
+            <span className="text-xs font-black">マイページ</span>
           </Link>
         </div>
       </footer>

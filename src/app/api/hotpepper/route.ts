@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-// Supabase service‑role client for server‑side inserts / upserts
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
 
 export interface Photo {
   pc?: {
@@ -43,6 +38,18 @@ export interface HotPepperShop {
 }
 
 export async function POST(req: Request) {
+  const supabase = createServerComponentClient({ cookies });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json(
+      { error: "ログインしてください" },
+      { status: 401 },
+    );
+  }
+
   let ids: string[] = [];
   let keyword = "";
   let genre = "";
