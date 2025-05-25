@@ -23,7 +23,7 @@ export default function Tab() {
               width={43}
               height={43}
             />
-            <span className="text-xs font-black">シェア</span>
+            <span className="text-xs font-semibold">シェア</span>
           </Link>
         </div>
         <div className="relative flex h-20 items-end transition-transform duration-200">
@@ -36,7 +36,7 @@ export default function Tab() {
             }`}
           >
             <Image src="/map-icon.svg" alt="map SVG" width={39} height={39} />
-            <span className="text-xs font-black">マップ</span>
+            <span className="text-xs font-semibold">マップ</span>
           </Link>
         </div>
         <div className="relative flex h-20 items-end transition-transform duration-200">
@@ -54,7 +54,7 @@ export default function Tab() {
               width={36}
               height={36}
             />
-            <span className="text-xs font-black">お店検索</span>
+            <span className="text-xs font-semibold">お店検索</span>
           </Link>
         </div>
         <div className="relative flex h-20 items-end transition-transform duration-200">
@@ -72,7 +72,7 @@ export default function Tab() {
               width={36}
               height={36}
             />
-            <span className="text-xs font-black">マイページ</span>
+            <span className="text-xs font-semibold">マイページ</span>
           </Link>
         </div>
       </footer>
