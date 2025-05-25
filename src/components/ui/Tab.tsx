@@ -20,8 +20,8 @@ export default function Tab() {
             <Image
               src="/share-icon.svg"
               alt="share SVG"
-              width={45}
-              height={45}
+              width={43}
+              height={43}
             />
             <span className="text-xs font-black">シェア</span>
           </Link>
@@ -35,7 +35,7 @@ export default function Tab() {
                 : "bg-gradient-to-b from-orange-50 via-orange-100 to-orange-200"
             }`}
           >
-            <Image src="/map-icon.svg" alt="map SVG" width={41} height={41} />
+            <Image src="/map-icon.svg" alt="map SVG" width={39} height={39} />
             <span className="text-xs font-black">マップ</span>
           </Link>
         </div>
@@ -51,8 +51,8 @@ export default function Tab() {
             <Image
               src="/search-icon.svg"
               alt="search SVG"
-              width={38}
-              height={38}
+              width={36}
+              height={36}
             />
             <span className="text-xs font-black">お店検索</span>
           </Link>
@@ -69,8 +69,8 @@ export default function Tab() {
             <Image
               src="/mypage-icon.svg"
               alt="mypage SVG"
-              width={38}
-              height={38}
+              width={36}
+              height={36}
             />
             <span className="text-xs font-black">マイページ</span>
           </Link>
