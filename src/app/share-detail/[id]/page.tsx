@@ -5,6 +5,7 @@ import { createBrowserSupabaseClient } from "@supabase/auth-helpers-nextjs";
 import Header from "@/components/ui/Header";
 import Tab from "@/components/ui/Tab";
 import Image from "next/image";
+import { CalendarDaysIcon } from "@heroicons/react/24/solid";
 
 interface HotPepperShop {
   id: string;
@@ -13,6 +14,7 @@ interface HotPepperShop {
   address: string;
   genre?: string;
   budget?: string;
+  station?: string;
   image_url?: string;
   content?: string;
   created_at?: string;
@@ -58,6 +60,8 @@ export default function ShareDetailPage() {
         console.error("エラー:", error);
       } else {
         setShop(data);
+
+        console.log("取得データ", data);
 
         // --- Fetch memos for this shop ---
         if (data?.id) {
@@ -116,7 +120,13 @@ export default function ShareDetailPage() {
             />
             <h2 className="text-lg font-semibold">{shop.name}</h2>
             <p className="text-sm text-gray-500">
-              {shop.genre ?? "ジャンル不明"}
+              ジャンル：{shop.genre ?? "ジャンル不明"}
+            </p>
+            <p className="text-sm text-gray-500">
+              ディナー予算：{shop.budget ?? "情報なし"}
+            </p>
+            <p className="text-sm text-gray-500">
+              最寄駅：{shop.station ?? "情報なし"}
             </p>
             <p className="text-sm text-gray-600">{shop.address}</p>
             <div className="mt-6">
@@ -160,18 +170,44 @@ export default function ShareDetailPage() {
                 onChange={(e) => setMemoInput(e.target.value)}
               />
               <button
-                className="mt-2 mb-20 rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+                className="mt-2 mb-10 w-full rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
                 onClick={handleSaveMemo}
                 disabled={!memoInput.trim() || !shop}
               >
                 保存
               </button>
+              <div className="mx-auto mb-25 flex w-full max-w-lg justify-center">
+                {shop?.hotpepper_id ? (
+                  <a
+                    href={`https://www.hotpepper.jp/str${shop.hotpepper_id}/yoyaku/`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex w-full max-w-[360px] flex-row items-center justify-center gap-2 rounded-lg border border-gray-500 bg-gradient-to-b from-white to-gray-100 py-3 shadow-md transition hover:bg-sky-50"
+                    style={{ minWidth: 240 }}
+                  >
+                    <CalendarDaysIcon className="h-6 w-6 text-sky-600" />
+                    <span className="text-lg font-semibold text-gray-800">
+                      予約する（HOT PEPPER予約）
+                    </span>
+                  </a>
+                ) : (
+                  <button
+                    disabled
+                    className="flex w-full max-w-[360px] flex-row items-center justify-center gap-2 rounded-lg border border-gray-300 bg-gray-100 py-3 text-lg font-semibold text-gray-400 opacity-50"
+                    style={{ minWidth: 240 }}
+                  >
+                    <CalendarDaysIcon className="h-6 w-6 text-gray-400" />
+                    予約する
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         ) : (
           <p>読み込み中...</p>
         )}
       </div>
+
       <Tab />
     </>
   );

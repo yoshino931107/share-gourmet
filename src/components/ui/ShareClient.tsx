@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Header from "@/components/ui/Header";
 import Tab from "@/components/ui/Tab";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
@@ -36,7 +36,7 @@ const fallbackImage =
 
 export default function ShareClient() {
   const [isLoading, setIsLoading] = useState(true);
-  const supabase = createClientComponentClient();
+  const supabase = useMemo(() => createClientComponentClient(), []);
 
   const searchParams = useSearchParams();
   const groupIdFromQuery = searchParams.get("group");
@@ -48,10 +48,10 @@ export default function ShareClient() {
   const [sharedShops, setSharedShops] = useState<HotPepperShop[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
 
-  // グループ取得後に初期値を決める
   useEffect(() => {
     if (groups.length > 0) {
-      setSelectedGroupId(groupIdFromQuery ?? groups[0].id);
+      const newSelectedGroupId = groupIdFromQuery ?? groups[0].id;
+      setSelectedGroupId(newSelectedGroupId);
     }
   }, [groups, groupIdFromQuery]);
 
@@ -60,30 +60,31 @@ export default function ShareClient() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        return;
+      }
 
-      // ここを groups テーブルから取得に修正！
       const { data } = await supabase
         .from("groups")
-        .select("id, name")
-        .eq("user_id", user.id); // 必要ならuser_idで絞る
-      console.log("🔥 groups data", data);
+        .select("id, name, user_id")
+        .eq("user_id", user.id);
 
-      if (data) setGroups(data);
+      if (data) {
+        setGroups(data);
+      }
     };
 
     fetchGroups();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [apiShopInfo, setApiShopInfo] = useState<{
     [id: string]: HotPepperShop;
   }>({});
 
-  // 1. Hotpepper API へ詳細情報をまとめて一括で取りに行く
   useEffect(() => {
     if (sharedShops.length === 0) return;
 
-    // 未取得のIDだけ抽出
     const hotpepperIds = sharedShops
       .map((s) => s.hotpepper_id)
       .filter((id) => !apiShopInfo[id]);
@@ -91,15 +92,13 @@ export default function ShareClient() {
 
     const fetchBulkDetails = async () => {
       try {
-        // 配列で一括fetch
-        const res = await fetch("/app/api/hotpepper", {
+        const res = await fetch("/api/hotpepper", {
           method: "POST",
-          body: JSON.stringify({ ids: hotpepperIds }), // ←複数IDで
+          body: JSON.stringify({ ids: hotpepperIds }),
           headers: { "Content-Type": "application/json" },
         });
 
         if (!res.ok) {
-          console.warn("⚠️ Hotpepper API 一括失敗:", res.status);
           return;
         }
 
@@ -108,9 +107,7 @@ export default function ShareClient() {
         if (!result || typeof result !== "object") return;
 
         setApiShopInfo((prev) => ({ ...prev, ...result }));
-      } catch (error) {
-        console.error("❌ Hotpepper API 一括エラー:", error);
-      }
+      } catch {}
     };
 
     fetchBulkDetails();
@@ -118,19 +115,14 @@ export default function ShareClient() {
   }, [sharedShops]);
 
   useEffect(() => {
-    console.log("🧩 sharedShops が変化:", sharedShops);
-  }, [sharedShops]);
-
-  useEffect(() => {
     const fetchSharedShops = async () => {
-      setIsLoading(true); // ローディング開始
+      setIsLoading(true);
 
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       if (!user) {
-        setIsLoading(false); // ユーザーなしでも読み込み終了
         return;
       }
 
@@ -158,28 +150,39 @@ export default function ShareClient() {
       } else {
         setSharedShops([]);
       }
-      setIsLoading(false); // 取得後にローディング終了
     };
     fetchSharedShops();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    setIsLoading(false);
+  }, [sharedShops]);
 
   const [shops, setShops] = useState<HotPepperShop[]>([]);
 
   const cacheRef = useRef<Map<string, HotPepperShop>>(new Map());
 
   useEffect(() => {
-    if (sharedShops.length === 0) return;
+    if (sharedShops.length === 0) {
+      setShops([]); // 共有ショップが空なら表示も空
+      return;
+    }
 
     const targets = sharedShops.filter(
       (s) => !cacheRef.current.has(s.hotpepper_id),
     );
 
     if (targets.length === 0) {
-      setShops(Array.from(cacheRef.current.values()));
+      setShops(
+        sharedShops
+          .map((s) => cacheRef.current.get(s.hotpepper_id))
+          .filter(Boolean) as HotPepperShop[],
+      );
       return;
     }
 
+    let ignore = false; // アンマウント対策
     (async () => {
       const fetched: HotPepperShop[] = [];
 
@@ -191,30 +194,17 @@ export default function ShareClient() {
             headers: { "Content-Type": "application/json" },
           });
 
-          if (!res.ok) {
-            console.warn("⚠️ fetch 失敗:", res.statusText);
-            continue;
-          }
+          if (!res.ok) continue;
 
           const json: HotPepperShop = await res.json();
           if (!json) continue;
 
           const apiData = Array.isArray(json) ? json[0] : json;
-          setApiShopInfo((prev) => ({
-            ...prev,
-            [t.hotpepper_id]: apiData,
-          }));
-
-          console.log("🔍 json.name:", json.name);
-          console.log("🔍 t.name (from Supabase):", t.name);
-          console.log("🔍 hotpepper APIレスポンス:", json);
-
-          if (!json || (Array.isArray(json) && json.length === 0)) {
-            console.warn(
-              "⚠️ Hotpepper API でお店データが取得できませんでした。",
-              t.hotpepper_id,
-            );
-            continue;
+          if (!ignore) {
+            setApiShopInfo((prev) => ({
+              ...prev,
+              [t.hotpepper_id]: apiData,
+            }));
           }
 
           const label =
@@ -235,37 +225,24 @@ export default function ShareClient() {
             group_id: t.group_id,
             groupLabel: label,
           });
-        } catch (err) {
-          console.error("❌ fetch エラー:", err);
-        }
+        } catch {}
       }
 
-      fetched.forEach((f) => cacheRef.current.set(f.hotpepper_id, f));
-      setShops(Array.from(cacheRef.current.values()));
+      if (!ignore) {
+        fetched.forEach((f) => cacheRef.current.set(f.hotpepper_id, f));
+        setShops(Array.from(cacheRef.current.values()));
+      }
     })();
+
+    return () => {
+      ignore = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sharedShops]);
 
   const filteredShops = shops.filter(
     (shop) => shop.group_id === selectedGroupId,
   );
-
-  useEffect(() => {
-    console.log(
-      "👜 shops →",
-      shops.map((s) => ({
-        name: s.name,
-        groupId: s.group_id,
-      })),
-    );
-  }, [shops]);
-
-  useEffect(() => {
-    console.log("🔍 filteredShops", filteredShops);
-    console.log("🔍 selectedGroupId", selectedGroupId);
-  }, [filteredShops, selectedGroupId]);
-
-  console.log(groups, sharedShops, selectedGroupId);
 
   return (
     <div className="mx-auto flex h-screen max-w-md flex-col">
@@ -276,12 +253,15 @@ export default function ShareClient() {
         </div>
       ) : (
         <>
-          <div className="flex justify-around border-t border-b bg-white px-4 py-2">
+          <div
+            className="flex w-full flex-nowrap overflow-x-auto border-t border-b bg-white px-2 py-2 whitespace-nowrap"
+            style={{ WebkitOverflowScrolling: "touch" }}
+          >
             {groups.map(({ id, name }) => (
               <button
                 key={id}
                 onClick={() => setSelectedGroupId(id)}
-                className={`text-base font-semibold transition ${
+                className={`mx-1 inline-block min-w-[80px] flex-shrink-0 text-base font-semibold transition ${
                   selectedGroupId === id
                     ? "border-b-2 border-orange-400 text-orange-400"
                     : "text-gray-500 hover:text-orange-400"
@@ -294,7 +274,7 @@ export default function ShareClient() {
           <main className="flex-1 overflow-y-auto bg-gray-50 p-2">
             {isLoading ? (
               <p className="p-4 text-center text-sm text-gray-400">
-                お店を表示します…
+                Loading...
               </p>
             ) : filteredShops.length === 0 ? (
               <p className="p-4 text-center text-sm text-gray-400">

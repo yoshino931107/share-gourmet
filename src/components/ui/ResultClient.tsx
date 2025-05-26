@@ -2,11 +2,12 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 
 type Shop = {
   id: string;
+  hotpepper_id: string;
   name: string;
   image_url: string | null;
   genre: string | null;
@@ -18,36 +19,37 @@ type ResultClientProps = {
   className?: string;
 };
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-export async function getAllShops() {
-  const { data, error } = await supabase.from("shared_shops").select("*");
-
-  if (error) {
-    throw error;
-  }
-
-  return data || [];
-}
-
 const ResultClient: React.FC<ResultClientProps> = ({ className }) => {
   const [shops, setShops] = useState<Shop[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const keyword = searchParams.get("keyword") || "";
 
   useEffect(() => {
     setLoading(true);
-    getAllShops()
-      .then((data) => {
-        setShops(data);
+    fetch("/api/hotpepper", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ keyword }),
+    })
+      .then((res) => res.json())
+      .then((result) => {
+        console.log("API result:", result);
+        setShops(Array.isArray(result) ? result : []);
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [keyword]);
 
-  const handleShopClick = (shopId: string) => {
-    router.push(`/shop/${shopId}`);
+  const handleShopClick = (shop: Shop) => {
+    if (!shop.hotpepper_id) {
+      console.warn("🚨 shop.hotpepper_id is undefined!", shop.hotpepper_id);
+      return;
+    }
+    console.log("🔗 navigate to /detail/", shop.hotpepper_id);
+    router.push(`/detail/${shop.hotpepper_id}`);
   };
 
   function getImageUrl(url?: string | null): string {
@@ -67,11 +69,12 @@ const ResultClient: React.FC<ResultClientProps> = ({ className }) => {
         ) : (
           <ul className="space-y-4">
             {shops.map((shop) => {
+              console.log("⭐ shopオブジェクト:", shop);
               return (
                 <li
                   key={shop.id}
                   className="flex cursor-pointer rounded-lg bg-white p-4 shadow-md transition hover:bg-gray-50"
-                  onClick={() => handleShopClick(shop.id)}
+                  onClick={() => handleShopClick(shop)}
                 >
                   <Image
                     src={getImageUrl(shop.image_url)}

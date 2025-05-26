@@ -79,33 +79,34 @@ export default function MapPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedGroupId]);
 
-  <MapContent
-    shops={sharedShops.map((shop) => ({
-      ...shop,
-      latitude: shop.latitude ?? 0, // 0などデフォルト値
-      longitude: shop.longitude ?? 0,
-    }))}
-  />;
-
   return (
     <div className="mx-auto flex h-screen max-w-md flex-col bg-white">
       <Header />
       {/* グループ切り替えタブ */}
-      <div className="flex justify-around border-b bg-white px-4 py-2">
-        {groups.map(({ id, name }) => (
-          <button
-            key={id}
-            onClick={() => setSelectedGroupId(id)}
-            className={`text-base font-semibold transition ${
-              selectedGroupId === id
-                ? "border-b-2 border-orange-400 text-orange-400"
-                : "text-gray-500 hover:text-orange-400"
-            }`}
-          >
-            {name}
-          </button>
-        ))}
-      </div>
+      {!selectedGroupId ? (
+        <div className="flex flex-1 items-center justify-center text-gray-400">
+          loading...
+        </div>
+      ) : (
+        <div
+          className="flex w-full flex-nowrap overflow-x-auto border-t border-b bg-white px-2 py-2 whitespace-nowrap"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
+          {groups.map(({ id, name }) => (
+            <button
+              key={id}
+              onClick={() => setSelectedGroupId(id)}
+              className={`mx-1 inline-block min-w-[80px] flex-shrink-0 text-base font-semibold transition ${
+                selectedGroupId === id
+                  ? "border-b-2 border-orange-400 text-orange-400"
+                  : "text-gray-500 hover:text-orange-400"
+              }`}
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+      )}
       {/* Map表示エリア（今は仮のMapContentでOK！） */}
       <main className="flex-1 overflow-y-auto bg-gray-50 p-2">
         <div className="h-full rounded-xl shadow">

@@ -34,6 +34,7 @@ export default function GroupSettingPage() {
       {
         name: groupName,
         created_by: user.id, // カラム名がcreated_byの場合
+        user_id: user.id, // user_idにも同じ値を入れる
       },
     ]);
     if (error) {

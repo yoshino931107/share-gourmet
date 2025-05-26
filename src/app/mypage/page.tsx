@@ -22,10 +22,16 @@ export default function MyPage() {
           </h2>
 
           <div className="flex flex-col gap-8">
-            <button className="mt-3 rounded-lg border border-gray-200 bg-white py-4 text-lg font-semibold shadow">
+            <button
+              className="mt-3 cursor-not-allowed rounded-lg border border-gray-200 bg-white py-4 text-lg font-semibold opacity-50 shadow"
+              disabled
+            >
               設定
             </button>
-            <button className="rounded-lg border border-gray-200 bg-white py-4 text-lg font-semibold shadow">
+            <button
+              className="cursor-not-allowed rounded-lg border border-gray-200 bg-white py-4 text-lg font-semibold opacity-50 shadow"
+              disabled
+            >
               個人ページ（保存したお店）
             </button>
             <button

@@ -38,7 +38,9 @@ type HotPepperShop = {
   longitude?: number | null;
   // photo等は他の箇所で使われている場合があるので省略しない
   photo?: PhotoType;
-  budget?: BudgetType;
+  budget?: BudgetType | string;
+  station?: string;
+  station_name?: string;
 };
 
 type SharedShopInsert = Database["public"]["Tables"]["shared_shops"]["Insert"];
@@ -127,7 +129,6 @@ export default function DetailPage() {
       user_id: user.id,
       hotpepper_id: shop.hotpepper_id,
       group_id: selectedGroupId,
-      // 追加 ↓
       name: shop.name ?? "名称不明",
       address: shop.address ?? "",
       shop_url: shop.shop_url ?? "",
@@ -209,8 +210,20 @@ export default function DetailPage() {
       if (shopsArray.length > 0) {
         const s = shopsArray[0];
 
-        const genreName = s.genre?.name ?? "ジャンル不明";
-        const budgetName = s.budget?.name ?? "情報なし";
+        const genreName =
+          typeof s.genre === "string"
+            ? s.genre
+            : (s.genre?.name ?? "ジャンル不明");
+
+        let budgetName = "情報なし";
+        if (s.budget) {
+          if (typeof s.budget === "string") {
+            budgetName = s.budget;
+          } else if (typeof s.budget === "object") {
+            budgetName = s.budget.name ?? "情報なし";
+          }
+        }
+
         // l が無い／空文字列の場合は m → s → logo_image → フォールバックの順で画像を決定
         const imageUrl = s.photo
           ? pickImageUrl(s.photo, s.logo_image ?? null, fallbackImage)
@@ -235,6 +248,8 @@ export default function DetailPage() {
             longitude: s.longitude ?? null,
             shop_url: s.shop_url ?? "",
             photo: s.photo,
+            station: s.station,
+            station_name: s.station_name,
           },
         ]);
 
@@ -253,10 +268,20 @@ export default function DetailPage() {
   const shop = shops[0];
 
   // shopがundefinedでないことを確認してから処理する
-  const displayGenre =
-    shop && typeof shop.genre === "object"
+  const displayGenre = shop
+    ? typeof shop.genre === "object"
       ? (shop.genre?.name ?? "ジャンル不明")
-      : (shop?.genre ?? "ジャンル不明");
+      : (shop.genre ?? "ジャンル不明")
+    : "ジャンル不明";
+
+  const displayBudget = (() => {
+    if (!shop) return "情報なし";
+    if (shop.budget == null) return "情報なし";
+    if (typeof shop.budget === "object") {
+      return shop.budget.name ?? "情報なし";
+    }
+    return shop.budget;
+  })();
 
   console.log("🟢 shop詳細:", shops[0]);
   console.log("APIのshop:", shop); // shop.genreやshop.budgetを確認
@@ -294,36 +319,34 @@ export default function DetailPage() {
               );
             })()}
             <div className="mx-4">
-              <h2 className="mt-4 text-xl font-semibold">{shops[0].name}</h2>
+              <h2 className="mt-4 text-2xl font-semibold">{shops[0].name}</h2>
+              {(shop.station || shop.station_name) && (
+                <p className="mt-1">
+                  <span className="font-medium">最寄駅：</span>
+                  {shop.station ?? shop.station_name}
+                </p>
+              )}
               <p className="mt-1">
                 <span className="font-medium">ジャンル：</span>
-                {typeof displayGenre === "string"
-                  ? displayGenre
-                  : (displayGenre?.name ?? "ジャンル不明")}
+                {displayGenre}
               </p>
               <p>
                 <span className="font-medium">ディナー予算：</span>
-                {(() => {
-                  // BudgetType | string | undefined を ⇒ string に変換
-                  if (shop.budget == null) return "情報なし";
-
-                  // BudgetType オブジェクトだった場合は name を採用
-                  if (typeof shop.budget === "object") {
-                    return shop.budget.name ?? "情報なし";
-                  }
-
-                  // すでに string 型ならそのまま
-                  return shop.budget;
-                })()}
+                {displayBudget}
               </p>
-              <p className="mb-30 text-sm text-gray-600">{shops[0].address}</p>
+              <p className="mb-30 text-base text-gray-600">
+                {shops[0].address}
+              </p>
               <div className="mt-6"></div>
             </div>
           </div>
         )}
-        <div className="fixed bottom-28 left-1/2 z-10 w-full max-w-[390px] -translate-x-1/2 px-3">
+        <div className="fixed bottom-30 left-1/2 z-10 w-full max-w-[390px] -translate-x-1/2 px-3">
           <div className="flex w-full justify-between gap-3">
-            <button className="flex-1 rounded-lg border border-gray-500 bg-linear-to-b from-white to-gray-100 p-1 py-2 shadow-md">
+            <button
+              disabled
+              className="flex-1 cursor-not-allowed rounded-lg border border-gray-500 bg-linear-to-b from-white to-gray-100 p-1 py-2 opacity-50 shadow-md"
+            >
               <div className="flex flex-row items-center justify-center">
                 <BookmarkIcon className="h-6 w-6 text-emerald-600" />
                 <span className="text-lg font-semibold text-gray-800">
@@ -342,14 +365,23 @@ export default function DetailPage() {
                 </span>
               </div>
             </button>
-            <button className="flex-1 rounded-lg border border-gray-500 bg-linear-to-b from-white to-gray-100 p-1 py-3 shadow-md">
-              <div className="flex flex-row items-center justify-center">
+            {shop?.hotpepper_id ? (
+              <a
+                href={`https://www.hotpepper.jp/str${shop.hotpepper_id}/yoyaku/`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-1 flex-row items-center justify-center rounded-lg border border-gray-500 bg-linear-to-b from-white to-gray-100 p-1 py-3 shadow-md"
+              >
                 <CalendarDaysIcon className="h-6 w-6 text-sky-600" />
                 <span className="text-lg font-semibold text-gray-800">
                   予約する
                 </span>
-              </div>
-            </button>
+              </a>
+            ) : (
+              <button disabled className="flex-1 opacity-50 ...">
+                予約する
+              </button>
+            )}
           </div>
         </div>
       </div>

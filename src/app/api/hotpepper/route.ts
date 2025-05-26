@@ -63,9 +63,7 @@ export async function POST(req: Request) {
     genre = body.genre || "";
     small_area = body.small_area || "";
     id = body.id || "";
-  } catch (error) {
-    console.error("🔥 リクエストボディの解析に失敗しました:", error);
-  }
+  } catch {}
 
   const apiKey =
     process.env.HOTPEPPER_API_KEY || process.env.NEXT_PUBLIC_HOTPEPPER_API_KEY;
@@ -134,8 +132,7 @@ export async function POST(req: Request) {
           latitude: shop.lat ?? null,
           longitude: shop.lng ?? null,
         };
-      } catch (e) {
-        console.warn("🔥 ID単体取得エラー:", hotpepperId, e);
+      } catch {
         continue;
       }
     }
@@ -155,8 +152,7 @@ export async function POST(req: Request) {
 
   try {
     res = await fetch(url);
-  } catch (error) {
-    console.error("🔥 Fetch処理中にエラーが発生しました:", error);
+  } catch {
     return NextResponse.json(
       { error: "データ取得中にエラーが発生しました" },
       { status: 500 },
@@ -231,6 +227,7 @@ export async function POST(req: Request) {
 
         return {
           id: shop.id,
+          hotpepper_id: shop.id,
           name: shop.name,
           image_url: imageUrl,
           genre:
