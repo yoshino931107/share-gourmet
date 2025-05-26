@@ -273,11 +273,11 @@ export default function ShareClient() {
           </div>
           <main className="flex-1 overflow-y-auto bg-gray-50 p-2">
             {isLoading ? (
-              <p className="p-4 text-center text-sm text-gray-400">
+              <p className="mt-70 p-4 text-center text-sm text-gray-400">
                 Loading...✍️
               </p>
             ) : filteredShops.length === 0 ? (
-              <p className="p-4 text-center text-sm text-gray-400">
+              <p className="mt-70 p-4 text-center text-sm text-gray-400">
                 Loading...✍️
               </p>
             ) : (
