@@ -3,7 +3,7 @@ import ShareClient from "@/components/ui/ShareClient";
 
 export default function SharePage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div>Loading...✍️</div>}>
       <ShareClient />
     </Suspense>
   );

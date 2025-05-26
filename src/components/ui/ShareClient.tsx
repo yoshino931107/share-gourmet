@@ -274,11 +274,11 @@ export default function ShareClient() {
           <main className="flex-1 overflow-y-auto bg-gray-50 p-2">
             {isLoading ? (
               <p className="p-4 text-center text-sm text-gray-400">
-                Loading...
+                Loading...✍️
               </p>
             ) : filteredShops.length === 0 ? (
               <p className="p-4 text-center text-sm text-gray-400">
-                まだシェアされたお店はありません
+                Loading...✍️
               </p>
             ) : (
               <div className="grid grid-cols-3 gap-px bg-gray-50">
