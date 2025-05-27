@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Header from "@/components/ui/Header";
 import Tab from "@/components/ui/Tab";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
@@ -161,84 +161,25 @@ export default function ShareClient() {
 
   const [shops, setShops] = useState<HotPepperShop[]>([]);
 
-  const cacheRef = useRef<Map<string, HotPepperShop>>(new Map());
-
   useEffect(() => {
     if (sharedShops.length === 0) {
-      setShops([]); // 共有ショップが空なら表示も空
+      setShops([]);
       return;
     }
-
-    const targets = sharedShops.filter(
-      (s) => !cacheRef.current.has(s.hotpepper_id),
-    );
-
-    if (targets.length === 0) {
-      setShops(
-        sharedShops
-          .map((s) => cacheRef.current.get(s.hotpepper_id))
-          .filter(Boolean) as HotPepperShop[],
-      );
-      return;
-    }
-
-    let ignore = false; // アンマウント対策
-    (async () => {
-      const fetched: HotPepperShop[] = [];
-
-      for (const t of targets) {
-        try {
-          const res = await fetch("/api/hotpepper", {
-            method: "POST",
-            body: JSON.stringify({ id: t.hotpepper_id }),
-            headers: { "Content-Type": "application/json" },
-          });
-
-          if (!res.ok) continue;
-
-          const json: HotPepperShop = await res.json();
-          if (!json) continue;
-
-          const apiData = Array.isArray(json) ? json[0] : json;
-          if (!ignore) {
-            setApiShopInfo((prev) => ({
-              ...prev,
-              [t.hotpepper_id]: apiData,
-            }));
-          }
-
-          const label =
-            groups.find((g) => g.id === t.group_id)?.name ??
-            t.group?.name ??
-            "未分類";
-
-          fetched.push({
-            id: t.id,
-            hotpepper_id: t.hotpepper_id,
-            name: t.name ?? apiData.name ?? "名称不明",
-            genre: apiData.genre,
-            address: apiData.address,
-            photo: apiData.photo,
-            image_url:
-              t.image_url ?? apiData.image_url ?? apiData.photo?.pc?.l ?? null,
-            urls: apiData.urls,
-            group_id: t.group_id,
-            groupLabel: label,
-          });
-        } catch {}
-      }
-
-      if (!ignore) {
-        fetched.forEach((f) => cacheRef.current.set(f.hotpepper_id, f));
-        setShops(Array.from(cacheRef.current.values()));
-      }
-    })();
-
-    return () => {
-      ignore = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sharedShops]);
+    // shopごとにapiShopInfoからデータを補完
+    const mergedShops = sharedShops.map((shop) => {
+      const apiData = apiShopInfo[shop.hotpepper_id] || {};
+      return {
+        ...shop,
+        ...apiData,
+        groupLabel:
+          groups.find((g) => g.id === shop.group_id)?.name ??
+          shop.group?.name ??
+          "未分類",
+      };
+    });
+    setShops(mergedShops);
+  }, [sharedShops, apiShopInfo, groups]);
 
   const filteredShops = shops.filter(
     (shop) => shop.group_id === selectedGroupId,
@@ -301,11 +242,9 @@ export default function ShareClient() {
                           {shop.name}
                         </p>
                         <p className="truncate text-xs text-gray-500">
-                          {apiShopInfo[shop.hotpepper_id]?.genre ||
-                            "ジャンル不明"}
+                          {shop.genre || "ジャンル不明"}
                           <br />
-                          {apiShopInfo[shop.hotpepper_id]?.middle_area ||
-                            "エリア不明"}
+                          {shop.middle_area || "エリア不明"}
                         </p>
                       </div>
                     </Link>

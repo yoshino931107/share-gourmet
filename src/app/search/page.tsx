@@ -84,7 +84,7 @@ export default function SearchPage() {
 
       const data = await res.json();
       const shops = Array.isArray(data) ? data : [];
-      setRecommendedShops(shops.slice(0, 12));
+      setRecommendedShops(shops.slice(0, 36));
     };
 
     fetchRecommendedShops();
@@ -181,7 +181,7 @@ export default function SearchPage() {
     const data = await res.json();
     const shops: HotPepperShop[] = Array.isArray(data) ? data : [];
 
-    setRecommendedShops(shops.slice(0, 12));
+    setRecommendedShops(shops.slice(0, 36));
   };
 
   // 検索ワードによるおすすめ店舗の再取得を防ぐため、searchWordを依存配列から除外
@@ -223,7 +223,7 @@ export default function SearchPage() {
             <h2 className="mb-2 px-2 text-sm font-semibold text-gray-700">
               おすすめのお店
             </h2>
-            <div className="grid grid-cols-3 gap-px bg-gray-300">
+            <div className="mb-20 grid grid-cols-3 gap-px bg-gray-300">
               {recommendedShops.map((shop) => {
                 return (
                   <Link
