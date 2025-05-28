@@ -23,12 +23,12 @@
 
 
 # 機能詳細
-・*検索* - 検索窓から飲食店を検索＆非検索時はおすすめの飲食店を表示
-・*シェア* - グループのメンバーに飲食店情報をシェアし、写真一覧で表示
-・*マップ* - シェアされた飲食店の位置情報をマーカーで表示
-・*メモ* - 飲食店ごとに気になるポイントを記載
-・*保存*（ストック） - 個人で気になる飲食店を保存（※実装予定）
-・*認証機能*
+・*検索* - 検索窓から飲食店を検索＆非検索時はおすすめの飲食店を表示<br />
+・*シェア* - グループのメンバーに飲食店情報をシェアし、写真一覧で表示<br />
+・*マップ* - シェアされた飲食店の位置情報をマーカーで表示<br />
+・*メモ* - 飲食店ごとに気になるポイントを記載<br />
+・*保存*（ストック） - 個人で気になる飲食店を保存（※実装予定）<br />
+・*認証機能*<br />
 ・*グループ管理*
 
 
@@ -48,21 +48,21 @@
 
 
 # デモURL・アカウント
-・*URL*
+・*URL*<br />
 https://share-gourmet.vercel.app/auth/login
 
 ・*テストアカウント*
- - メールアドレス
+ - メールアドレス<br />
 devtest.yoshino@gmail.com
 
- - パスワード
+ - パスワード<br />
 12345abcde
 
 
    <img width="423" alt="スクリーンショット 2025-05-28 22 46 37" src="https://github.com/user-attachments/assets/d4fb957f-1a7e-49ff-9118-ab8d7d2d6d9b" />
-   
-<img width="424" alt="スクリーンショット 2025-05-28 22 48 27" src="https://github.com/user-attachments/assets/f80a8861-dd25-4c41-9139-e86ba8974391" />
-
-<img width="423" alt="スクリーンショット 2025-05-28 22 49 47" src="https://github.com/user-attachments/assets/ba924459-150b-4f1c-8f56-7851e999964e" />
-
-<img width="422" alt="スクリーンショット 2025-05-28 22 51 01" src="https://github.com/user-attachments/assets/e1b7946b-ad69-4a5b-ba73-d55675da911f" />
+<br />
+   <img width="424" alt="スクリーンショット 2025-05-28 22 48 27" src="https://github.com/user-attachments/assets/f80a8861-dd25-4c41-9139-e86ba8974391" />
+<br />
+   <img width="423" alt="スクリーンショット 2025-05-28 22 49 47" src="https://github.com/user-attachments/assets/ba924459-150b-4f1c-8f56-7851e999964e" />
+<br />
+   <img width="422" alt="スクリーンショット 2025-05-28 22 51 01" src="https://github.com/user-attachments/assets/e1b7946b-ad69-4a5b-ba73-d55675da911f" />
