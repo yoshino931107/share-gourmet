@@ -1,5 +1,5 @@
 # 概要
-### 気になるグルメ、シェア＆ストック！
+## 気になるグルメ、シェア＆ストック！
 「シェアグル」は、気になる飲食店を家族や友人、恋人、同僚とシェア＆
 ストックできるアプリです。
 外食する際の「どこ行こう？」問題を、スムーズに楽しく解決します。
@@ -60,6 +60,9 @@ devtest.yoshino@gmail.com
 
 
    <img width="423" alt="スクリーンショット 2025-05-28 22 46 37" src="https://github.com/user-attachments/assets/d4fb957f-1a7e-49ff-9118-ab8d7d2d6d9b" />
+   
 <img width="424" alt="スクリーンショット 2025-05-28 22 48 27" src="https://github.com/user-attachments/assets/f80a8861-dd25-4c41-9139-e86ba8974391" />
+
 <img width="423" alt="スクリーンショット 2025-05-28 22 49 47" src="https://github.com/user-attachments/assets/ba924459-150b-4f1c-8f56-7851e999964e" />
+
 <img width="422" alt="スクリーンショット 2025-05-28 22 51 01" src="https://github.com/user-attachments/assets/e1b7946b-ad69-4a5b-ba73-d55675da911f" />
