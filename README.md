@@ -44,14 +44,14 @@
     * HOT PEPPER API
 
 # デモURL・アカウント
-・URL<br />
+* URL<br />
 https://share-gourmet.vercel.app/auth/login
 
-*テストアカウント
- - メールアドレス<br />
+* テストアカウント
+    * メールアドレス<br />
 devtest.yoshino@gmail.com
 
- - パスワード<br />
+    * パスワード<br />
 12345abcde
 
 # 画面キャプチャ<br />
