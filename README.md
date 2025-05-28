@@ -43,18 +43,19 @@
 <br />
 <br />
 # デモURL・アカウント
-・*URL*<br />
+*URL<br />
 https://share-gourmet.vercel.app/auth/login
 <br />
-・*テストアカウント*
+*テストアカウント<br />
  - メールアドレス<br />
 devtest.yoshino@gmail.com
 <br />
  - パスワード<br />
-12345abcde
+12345abcde<br />
 <br />
 <br />
-# 画面キャプチャ<br />
+# 画面キャプチャ
+<br />
 <img width="423" alt="スクリーンショット 2025-05-28 22 46 37" src="https://github.com/user-attachments/assets/d4fb957f-1a7e-49ff-9118-ab8d7d2d6d9b" />
 <br />
 <img width="424" alt="スクリーンショット 2025-05-28 22 48 27" src="https://github.com/user-attachments/assets/f80a8861-dd25-4c41-9139-e86ba8974391" />
