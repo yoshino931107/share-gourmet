@@ -4,17 +4,34 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/utils/supabase/supabase";
 
+/**
+ * サインアップ用フォームコンポーネント
+ * @returns JSX.Element 新規登録画面UI
+ */
 export const SignUp = () => {
+  /**
+   * ユーザーが入力するフォームデータ（名前・メール・パスワード）
+   */
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "", // ←必ず空文字で入れておく！
   });
+
+  /**
+   * 画面遷移用Router
+   */
   const router = useRouter();
 
+  /**
+   * サインアップ処理
+   * 1. Supabase Authでユーザー作成
+   * 2. profilesテーブルへ追加情報（名前・メール）登録
+   * 3. エラー時はアラートで通知
+   * @param {React.FormEvent} e フォーム送信イベント
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
 
     try {
       // 1. Supabase Authでユーザー登録
@@ -49,14 +66,18 @@ export const SignUp = () => {
         return;
       }
 
+      // 3. 正常時はログインページへ遷移
       alert("サインアップ成功！ログインページに移動します。");
-      router.push("/login");
+      router.push("/auth/login");
     } catch (error) {
-      console.error("An unexpected error occurred:", error);
       alert("予期しないエラーが発生しました。");
     }
   };
 
+  /**
+   * フォーム入力変更時のstate更新
+   * @param {React.ChangeEvent<HTMLInputElement>} e 入力イベント
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -65,6 +86,9 @@ export const SignUp = () => {
     }));
   };
 
+  /**
+   * サインアップ画面UI
+   */
   return (
     <div className="mt-10 flex flex-col items-center justify-center px-4">
       {/* メインフォーム */}
@@ -75,6 +99,7 @@ export const SignUp = () => {
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           <div className="space-y-6">
+            {/* 名前入力 */}
             <div>
               <label
                 htmlFor="name"
@@ -94,6 +119,7 @@ export const SignUp = () => {
               />
             </div>
 
+            {/* メールアドレス入力 */}
             <div>
               <label
                 htmlFor="email"
@@ -113,6 +139,7 @@ export const SignUp = () => {
               />
             </div>
 
+            {/* パスワード入力 */}
             <div>
               <label
                 htmlFor="password"
@@ -134,6 +161,7 @@ export const SignUp = () => {
             </div>
           </div>
 
+          {/* 送信ボタン */}
           <button
             type="submit"
             className="mt-10 flex w-full justify-center rounded-full bg-blue-500 px-4 py-3 text-lg font-semibold text-white hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
@@ -142,6 +170,7 @@ export const SignUp = () => {
           </button>
         </form>
 
+        {/* ログインページ誘導 */}
         <p className="mt-4 text-center text-sm text-gray-600">
           Already have an account?{" "}
           <Link

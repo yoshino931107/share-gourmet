@@ -2,10 +2,21 @@
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { supabase } from "@/utils/supabase/supabase";
 
 type HeaderProps = React.HTMLAttributes<HTMLElement>;
 
 export default function Header({ className, ...props }: HeaderProps) {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    // ユーザー取得
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+    });
+  }, []);
+
   return (
     <header
       {...props}
@@ -31,13 +42,18 @@ export default function Header({ className, ...props }: HeaderProps) {
         </Link>
         {/* ログイン・新規登録リンク */}
         <div className="mr-1 ml-4 flex gap-2 text-orange-950 opacity-60">
-          <Link href="/auth/login" className="mt-1 text-sm font-semibold">
-            ログイン
-          </Link>
-          <span className="">|</span>
-          <Link href="/auth/signup" className="mt-1 text-sm font-semibold">
-            新規登録
-          </Link>
+          {/* ログインユーザーがいない場合だけ表示 */}
+          {!user && (
+            <>
+              <Link href="/auth/login" className="mt-1 text-sm font-semibold">
+                ログイン
+              </Link>
+              <span>|</span>
+              <Link href="/auth/signup" className="mt-1 text-sm font-semibold">
+                新規登録
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>

@@ -1,4 +1,11 @@
 "use client";
+/**
+ * @fileoverview
+ * このファイルは、ユーザーの所属するグループごとに共有された飲食店情報を地図上に表示するページコンポーネントを提供します。
+ * Supabaseを用いてログインユーザーのグループ情報と共有店舗情報を取得し、
+ * それらをグループ切替タブと地図表示でユーザーに提供します。
+ */
+
 import Header from "@/components/ui/Header";
 import Tab from "@/components/ui/Tab";
 import { MapContent } from "@/components/ui/Map";
@@ -27,8 +34,20 @@ interface Group {
 }
 
 export default function MapPage() {
+  /**
+   * @description
+   * グループ一覧の状態管理
+   */
   const [groups, setGroups] = useState<Group[]>([]);
+  /**
+   * @description
+   * 選択中グループに紐づく共有店舗情報の状態管理
+   */
   const [sharedShops, setSharedShops] = useState<HotPepperShop[]>([]);
+  /**
+   * @description
+   * 現在選択されているグループIDの状態管理
+   */
   const [selectedGroupId, setSelectedGroupId] = useState<string | undefined>(
     undefined,
   );
@@ -36,13 +55,20 @@ export default function MapPage() {
   // Supabaseクライアントを忘れずに生成
   const supabase = createClientComponentClient();
 
+  /**
+   * @description
+   * グループ一覧が取得できたら、初期選択として最初のグループをselectedGroupIdに設定する処理
+   */
   useEffect(() => {
-    // グループ初期選択
     if (groups.length > 0 && !selectedGroupId) {
       setSelectedGroupId(groups[0].id);
     }
   }, [groups, selectedGroupId]);
 
+  /**
+   * @description
+   * Supabaseからログインユーザーのグループ一覧を取得し、状態にセットする非同期処理
+   */
   useEffect(() => {
     const fetchGroups = async () => {
       const {
@@ -63,6 +89,10 @@ export default function MapPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /**
+   * @description
+   * 選択されたグループIDに基づいて、そのグループに共有されている店舗情報をSupabaseから取得し状態にセットする非同期処理
+   */
   useEffect(() => {
     if (!selectedGroupId) return;
 
@@ -82,7 +112,11 @@ export default function MapPage() {
   return (
     <div className="mx-auto flex h-screen max-w-md flex-col bg-white">
       <Header />
-      {/* グループ切り替えタブ */}
+      {/**
+       * @description
+       * グループ切り替え用のタブUI部分
+       * selectedGroupIdが未設定の場合はローディング表示
+       */}
       {!selectedGroupId ? (
         <div className="flex flex-1 items-center justify-center text-gray-400">
           loading...
@@ -107,7 +141,11 @@ export default function MapPage() {
           ))}
         </div>
       )}
-      {/* Map表示エリア（今は仮のMapContentでOK！） */}
+      {/**
+       * @description
+       * 地図表示エリア
+       * 共有店舗情報をMapContentコンポーネントに渡して表示
+       */}
       <main className="flex-1 overflow-y-auto bg-gray-50 p-2">
         <div className="h-full rounded-xl shadow">
           <MapContent
@@ -119,6 +157,10 @@ export default function MapPage() {
           />
         </div>
       </main>
+      {/**
+       * @description
+       * ページ下部のTabコンポーネント表示
+       */}
       <Tab />
     </div>
   );

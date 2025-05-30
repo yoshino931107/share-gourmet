@@ -46,12 +46,19 @@ type HotPepperShop = {
 type SharedShopInsert = Database["public"]["Tables"]["shared_shops"]["Insert"];
 
 export default function DetailPage() {
-  // ────────────────────────────────────────────────
-  // 画像が取得できなかった場合に表示するフォールバック画像
+  /**
+   * 画像が取得できなかった場合に表示するフォールバック画像のURL
+   */
   const fallbackImage = "https://placehold.jp/150x150.png";
 
-  // 画像 URL を決定するヘルパー
-  // l → m → s → logo_image → フォールバック の順に探して返す
+  /**
+   * 画像 URL を決定するヘルパー関数
+   * l → m → s → logo_image → フォールバック の順に探して返す
+   * @param p HotPepperShopのphoto情報
+   * @param logo ロゴ画像URL
+   * @param fallback フォールバック画像URL
+   * @returns 適切な画像URL
+   */
   const pickImageUrl = (
     p: HotPepperShop["photo"] | undefined,
     logo: string | null,
@@ -64,21 +71,45 @@ export default function DetailPage() {
     return fallback;
   };
   // ────────────────────────────────────────────────
+
+  /**
+   * お店情報の状態
+   */
   const [shops, setShops] = useState<HotPepperShop[]>([]);
+  /**
+   * ローディング状態の管理
+   */
   const [loading, setLoading] = useState(true);
+  /**
+   * シェア用のグループ一覧
+   */
   const [groups, setGroups] = useState<{ id: string; label: string }[]>([]);
+  /**
+   * URLパラメータから取得したホットペッパーID
+   */
   const params = useParams();
-  console.log("🔥 params:", params);
   const hotpepperId = params.id as string;
+  /**
+   * Next.jsのルーター
+   */
   const router = useRouter();
+  /**
+   * シェアダイアログの開閉状態
+   */
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  /**
+   * シェア先に選択されたグループID
+   */
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
 
+  /**
+   * グループ一覧をSupabaseから取得する副作用
+   * コンポーネントマウント時に一度だけ実行
+   */
   useEffect(() => {
     const fetchGroups = async () => {
       const { data, error } = await supabase.from("groups").select("id,name");
       if (error) {
-        console.error("❌ グループ取得失敗:", error);
         return;
       }
       if (data) {
@@ -88,6 +119,10 @@ export default function DetailPage() {
     fetchGroups();
   }, []);
 
+  /**
+   * シェアボタン押下時の処理
+   * 選択されたグループに対して現在表示中のお店情報をshared_shopsテーブルにupsertする
+   */
   const handleShare = async () => {
     if (!selectedGroupId || shops.length === 0) return;
     const shop = shops[0];
@@ -95,9 +130,7 @@ export default function DetailPage() {
     // ① ログインユーザー取得
     const {
       data: { user },
-      error: authError,
     } = await supabase.auth.getUser();
-    console.log("user:", user, "authError:", authError);
 
     if (!user) {
       alert("ログインしてください");
@@ -111,12 +144,17 @@ export default function DetailPage() {
           ? shop.image_url
           : "https://placehold.jp/150x150.png";
 
-    // upsert
+    // ジャンル情報の正規化
     const upsertGenre =
       typeof shop.genre === "object"
         ? (shop.genre?.name ?? "ジャンル不明")
         : (shop.genre ?? "ジャンル不明");
 
+    /**
+     * 予算情報を文字列に正規化するヘルパー関数
+     * @param b 予算情報（オブジェクトまたは文字列）
+     * @returns 文字列またはnull
+     */
     const normalizeBudget = (
       b: BudgetType | string | null | undefined,
     ): string | null => {
@@ -146,19 +184,19 @@ export default function DetailPage() {
       });
 
     if (upsertError) {
-      console.error("シェア保存失敗:", upsertError);
+      // シェア保存失敗時のエラーハンドリング（ログ出力削除）
     } else {
       router.push(`/share?group=${selectedGroupId}`);
     }
   };
 
+  /**
+   * ホットペッパーIDに基づいてお店情報を取得する副作用
+   * UUID形式かどうかでSupabaseの取得方法を切り替え、なければAPIから取得する
+   * hotpepperIdが変わるたびに実行される
+   */
   useEffect(() => {
     const fetchShop = async () => {
-      console.log("🛬 DetailPage param id:", hotpepperId);
-      if (shops.length > 0 && shops[0].photo) {
-        console.log("APIのphoto部分:", shops[0].photo);
-      }
-
       // UUIDかどうかの簡易チェック（36文字でハイフンが含まれる）
       const isUUID = hotpepperId.length === 36 && hotpepperId.includes("-");
 
@@ -172,7 +210,7 @@ export default function DetailPage() {
       const { data, error } = await query;
 
       if (error) {
-        console.error("Supabaseエラー:", error.message, error);
+        // Supabaseエラー時のエラーハンドリング（ログ出力削除）
       }
 
       if (data && data.length > 0) {
@@ -182,7 +220,6 @@ export default function DetailPage() {
       }
 
       // 🔍 呼び出し直前に id を確認
-      console.log("🛫 id を持って API へ:", hotpepperId);
 
       // ────────────────────────────────
       // 現在ログイン中のユーザーを取得（shops に user_id を入れるため）
@@ -197,15 +234,8 @@ export default function DetailPage() {
         headers: { "Content-Type": "application/json" },
       }).then((r) => r.json());
 
-      // 🔍 レスポンス件数を確認
-      console.log("🚩 API から戻り:", Array.isArray(hp) ? hp.length : 0);
-
-      console.log("🚩 APIからの生のレスポンス:", hp);
-
       // hp が配列ではなく単一オブジェクトのケースもあるので安全に配列化
       const shopsArray = Array.isArray(hp) ? hp : hp ? [hp] : [];
-
-      console.log("✨ shopsArray.length:", shopsArray.length, shopsArray);
 
       if (shopsArray.length > 0) {
         const s = shopsArray[0];
@@ -231,9 +261,6 @@ export default function DetailPage() {
             ? s.image_url
             : fallbackImage;
 
-        console.log("🔥 hp.results.shop:", shopsArray);
-        console.log("✅ APIで見つかったお店情報:", s);
-
         setShops([
           {
             hotpepper_id: s.id,
@@ -252,11 +279,8 @@ export default function DetailPage() {
             station_name: s.station_name,
           },
         ]);
-
-        console.log("shopsArray:", shopsArray, "length:", shopsArray.length);
       } else {
-        console.log("⚠️ 判定elseに入った！", hp);
-        console.warn("⚠️ APIでお店が見つかりませんでした！", hotpepperId);
+        // APIでお店が見つかりませんでした
       }
       setLoading(false);
     };
@@ -265,15 +289,23 @@ export default function DetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hotpepperId]);
 
+  /**
+   * 現在表示中のお店情報（配列の先頭を使用）
+   */
   const shop = shops[0];
 
-  // shopがundefinedでないことを確認してから処理する
+  /**
+   * お店のジャンル表示用文字列を取得
+   */
   const displayGenre = shop
     ? typeof shop.genre === "object"
       ? (shop.genre?.name ?? "ジャンル不明")
       : (shop.genre ?? "ジャンル不明")
     : "ジャンル不明";
 
+  /**
+   * お店の予算表示用文字列を取得
+   */
   const displayBudget = (() => {
     if (!shop) return "情報なし";
     if (shop.budget == null) return "情報なし";
@@ -283,9 +315,49 @@ export default function DetailPage() {
     return shop.budget;
   })();
 
-  console.log("🟢 shop詳細:", shops[0]);
-  console.log("APIのshop:", shop); // shop.genreやshop.budgetを確認
+  /**
+   * 保存済みかどうかの状態管理
+   */
+  const [isSaved, setIsSaved] = useState(false);
 
+  /**
+   * 保存ボタン押下時の処理
+   * ログインユーザーのprivate_shopsテーブルにお店情報をupsertし、保存済み状態にする
+   */
+  const handleSave = async () => {
+    // ログインユーザー取得
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      alert("ログインしてください");
+      return;
+    }
+    // 必要な情報（shop, user.idなど）を保存用に用意
+    const payload = {
+      user_id: user.id,
+      hotpepper_id: shop.hotpepper_id,
+      name: shop.name,
+      address: shop.address,
+      image_url: shop.image_url,
+      // 必要なフィールドを追加
+    };
+    // 保存テーブル（例: private_shops）へupsert
+    const { error } = await supabase.from("private_shops").upsert([payload], {
+      onConflict: "user_id,hotpepper_id",
+    });
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    setIsSaved(true);
+    router.push("/private");
+  };
+
+  /**
+   * メインのレンダリング部分
+   * お店情報の表示、保存ボタン、シェアボタン、予約ボタン、シェア用ダイアログなどのUIを構築する
+   */
   return (
     <>
       <Header />
@@ -303,10 +375,6 @@ export default function DetailPage() {
                 shop.image_url && shop.image_url !== ""
                   ? shop.image_url
                   : pickImageUrl(shop.photo, null, fallbackImage);
-
-              console.log("🖼️ 画像URL (displayUrl):", displayUrl);
-              console.log("▶️ shop.image_url:", shop.image_url);
-              console.log("▶️ shop.photo:", shop.photo);
 
               return (
                 <Image
@@ -343,17 +411,20 @@ export default function DetailPage() {
         )}
         <div className="fixed bottom-30 left-1/2 z-10 w-full max-w-[390px] -translate-x-1/2 px-3">
           <div className="flex w-full justify-between gap-3">
+            {/* 保存ボタン */}
             <button
-              disabled
-              className="flex-1 cursor-not-allowed rounded-lg border border-gray-500 bg-linear-to-b from-white to-gray-100 p-1 py-2 opacity-50 shadow-md"
+              onClick={!isSaved ? handleSave : undefined}
+              disabled={isSaved}
+              className={`flex-1 rounded-lg border border-gray-500 bg-gradient-to-b from-white to-gray-100 p-1 py-3 shadow-md`}
             >
               <div className="flex flex-row items-center justify-center">
                 <BookmarkIcon className="h-6 w-6 text-emerald-600" />
                 <span className="text-lg font-semibold text-gray-800">
-                  保存する
+                  {isSaved ? "保存済み" : "保存する"}
                 </span>
               </div>
             </button>
+            {/* シェアボタン */}
             <button
               onClick={() => setIsDialogOpen(true)}
               className="flex-1 rounded-lg border border-gray-500 bg-linear-to-b from-white to-rose-50 p-1 py-2 shadow-md"
@@ -365,6 +436,7 @@ export default function DetailPage() {
                 </span>
               </div>
             </button>
+            {/* 予約ボタン（hotpepper_idがあればリンク、なければ無効化） */}
             {shop?.hotpepper_id ? (
               <a
                 href={`https://www.hotpepper.jp/str${shop.hotpepper_id}/yoyaku/`}
@@ -385,9 +457,11 @@ export default function DetailPage() {
           </div>
         </div>
       </div>
+      {/* タブメニュー */}
       <div className="fixed right-0 bottom-0 left-0 z-10 bg-white">
         <Tab />
       </div>
+      {/* シェア用ダイアログ */}
       <Dialog
         open={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}

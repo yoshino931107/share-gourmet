@@ -10,15 +10,22 @@ type GroupRow = Pick<
 >;
 import { supabase } from "@/utils/supabase/supabase";
 
+/** グループ設定ページコンポーネント */
 export default function GroupSettingPage() {
+  /** 状態管理フック: 新規グループ作成ダイアログの開閉状態 */
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  /** 状態管理フック: 新規グループ名 */
   const [groupName, setGroupName] = useState("");
+  /** 状態管理フック: 招待ダイアログの開閉状態 */
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+  /** 状態管理フック: グループ一覧 */
   const [groups, setGroups] = useState<GroupRow[]>([]);
+  /** 状態管理フック: 選択されたグループID */
   const [selectedGroupId, setSelectedGroupId] = useState("");
+  /** 状態管理フック: 生成された招待URL */
   const [inviteUrl, setInviteUrl] = useState("");
 
-  // 新規グループ作成処理
+  /** 新規グループ作成処理 */
   async function handleCreateGroup() {
     if (!groupName) return;
     // ログインユーザー情報の取得
@@ -46,7 +53,7 @@ export default function GroupSettingPage() {
     alert("グループを作成しました！");
   }
 
-  // グループ一覧取得
+  /** グループ一覧を取得する副作用 */
   useEffect(() => {
     async function fetchGroups() {
       if (!isInviteDialogOpen) return;
@@ -63,7 +70,7 @@ export default function GroupSettingPage() {
     fetchGroups();
   }, [isInviteDialogOpen]);
 
-  // 招待URL生成
+  /** グループ招待URL発行処理 */
   function handleInviteUrl() {
     if (!selectedGroupId) return;
     const url = `https://${window.location.host}/join?group_id=${selectedGroupId}`;
@@ -79,13 +86,14 @@ export default function GroupSettingPage() {
             グループ管理ページ
           </h2>
           <div className="flex flex-col gap-8">
-            {/* 新規グループ作成ボタン */}
+            {/* UI: 新規グループ作成ボタン */}
             <button
               className="mt-3 rounded-lg border border-gray-200 bg-white py-4 text-lg font-semibold shadow"
               onClick={() => setIsDialogOpen(true)}
             >
               新規グループ作成
             </button>
+            {/* UI: 既存グループ招待ボタン */}
             <button
               className="mb-4 rounded-lg border border-gray-200 bg-white py-4 text-lg font-semibold shadow"
               onClick={() => setIsInviteDialogOpen(true)}
@@ -96,7 +104,7 @@ export default function GroupSettingPage() {
         </div>
       </main>
 
-      {/* 新規グループ作成ダイアログ */}
+      {/* UI: 新規グループ作成ダイアログ */}
       {isDialogOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="w-full max-w-xs rounded-lg bg-white p-6 shadow-lg">
@@ -128,7 +136,7 @@ export default function GroupSettingPage() {
           </div>
         </div>
       )}
-      {/* 招待ダイアログ */}
+      {/* UI: 招待ダイアログ */}
       {isInviteDialogOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="w-full max-w-xs rounded-lg bg-white p-6 shadow-lg">
@@ -188,7 +196,7 @@ export default function GroupSettingPage() {
         </div>
       )}
 
-      {/* フッタータブ */}
+      {/* UI: フッタータブ */}
       <div className="fixed inset-x-0 bottom-0 z-10">
         <Tab />
       </div>

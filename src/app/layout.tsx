@@ -1,9 +1,8 @@
-"use client";
 import "./globals.css";
-import { SessionContextProvider } from "@supabase/auth-helpers-react";
-import { cn } from "@/lib/utils";
-import { supabase } from "@/utils/supabase/supabase";
+
+import SessionProvider from "@/components/SessionProvider";
 import { Noto_Sans_JP } from "next/font/google";
+import { cn } from "@/lib/utils";
 
 const notoSansJp = Noto_Sans_JP({
   weight: ["400", "700"],
@@ -11,26 +10,24 @@ const notoSansJp = Noto_Sans_JP({
   variable: "--font-rounded",
 });
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
     <html lang="ja" className={notoSansJp.variable}>
-      {/* 外側グレー */}
       <body
         className={cn(
           "min-h-screen bg-gray-100 antialiased",
           notoSansJp.variable,
         )}
       >
-        <SessionContextProvider supabaseClient={supabase}>
-          {/* 真ん中だけ白く＆スマホ幅に制限 */}
+        <SessionProvider>
           <div className="relative mx-auto min-h-screen max-w-[420px] bg-white shadow-lg">
             {children}
           </div>
-        </SessionContextProvider>
+        </SessionProvider>
       </body>
     </html>
   );

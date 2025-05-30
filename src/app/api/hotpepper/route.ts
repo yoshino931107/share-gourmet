@@ -14,7 +14,9 @@ export interface Photo {
   };
 }
 
-// API返却・アプリ全体で共通利用する「お店データ型」
+/**
+ * API返却・アプリ全体で共通利用する「お店データ型」
+ */
 export interface HotPepperShop {
   id: string;
   hotpepper_id: string;
@@ -38,6 +40,9 @@ export interface HotPepperShop {
 }
 
 export async function POST(req: Request) {
+  /**
+   * ユーザー認証チェック。未ログインなら401を返す
+   */
   const supabase = createServerComponentClient({ cookies });
   const {
     data: { user },
@@ -74,7 +79,10 @@ export async function POST(req: Request) {
     );
   }
 
-  // 複数IDでまとめて取得するロジック
+  /**
+   * HotPepper APIから複数IDでまとめて店舗情報を取得し、Supabaseにもupsert。
+   * 取得したお店情報を返す。
+   */
   if (Array.isArray(ids) && ids.length > 0) {
     const results: Record<string, HotPepperShop> = {};
     for (const hotpepperId of ids) {
@@ -139,7 +147,10 @@ export async function POST(req: Request) {
     return NextResponse.json(results, { status: 200 });
   }
 
-  // （従来通りの単体検索: id, keyword, genre, small_area）
+  /**
+   * 単体の検索条件（id/キーワード/ジャンル/エリア）でHotPepper APIから検索し、
+   * 必要な店舗情報をSupabaseにupsertし、整形して返す。
+   */
   const url =
     `https://webservice.recruit.co.jp/hotpepper/gourmet/v1/?key=${apiKey}` +
     (id ? `&id=${id}` : "") +

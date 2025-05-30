@@ -1,3 +1,10 @@
+/**
+ * @fileoverview
+ * 検索ページ（/search）。ユーザーがキーワードでお店検索し、おすすめのお店一覧も表示するページ。
+ * - 入力欄でキーワード検索し、APIから店舗一覧を取得・表示
+ * - おすすめのお店も初回マウント時に取得・表示
+ * - 画像プレースホルダー対応、ジャンル・エリア変換マップあり
+ */
 "use client";
 import Link from "next/link";
 import Image from "next/image";
@@ -25,11 +32,20 @@ interface HotPepperShop {
 }
 import { useEffect, useState } from "react";
 
+/**
+ * HotPepper店舗URLからID（strJ*********）を抽出するユーティリティ関数
+ * @param url 店舗URL
+ * @returns hotpepper_id もしくは null
+ */
 function extractHotpepperIdFromUrl(url: string): string | null {
   const match = url.match(/\/str(J\d{9})\//);
   return match ? match[1] : null;
 }
 
+/**
+ * @description
+ * 検索ページのメインコンポーネント。検索機能＆おすすめ店舗表示。
+ */
 export default function SearchPage() {
   // const [searchWord, setSearchWord] = useState("");
 
@@ -41,7 +57,11 @@ export default function SearchPage() {
 
   const [searchWord, setSearchWord] = useState("");
 
-  // HotPepper 画像URLを安全に取得
+  /**
+   * 店舗オブジェクトから安全な画像URLを取得
+   * @param shop HotPepperShop オブジェクト
+   * @returns 画像URL
+   */
   const getSafeLogoImage = (shop: HotPepperShop) => {
     const photoUrl =
       shop.image_url ||
@@ -63,8 +83,10 @@ export default function SearchPage() {
   // const supabase = createClientComponentClient();
 
   useEffect(() => {
+    /**
+     * 初回マウント時におすすめの店舗リストをAPIから取得
+     */
     const fetchRecommendedShops = async () => {
-      console.log(recommendedShops);
       const res = await fetch("/api/hotpepper", {
         method: "POST",
         headers: {
@@ -77,18 +99,12 @@ export default function SearchPage() {
         }),
       });
 
-      if (!res.ok) {
-        console.error("🔥 おすすめ店舗取得失敗:", res.status);
-        return;
-      }
-
       const data = await res.json();
       const shops = Array.isArray(data) ? data : [];
       setRecommendedShops(shops.slice(0, 36));
     };
 
     fetchRecommendedShops();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ジャンル名→ジャンルコード変換マップ
@@ -119,6 +135,11 @@ export default function SearchPage() {
     中目黒: "Z013",
   };
 
+  /**
+   * キーワードからAPIに渡すbodyオブジェクトを構築
+   * @param search ユーザー入力キーワード
+   * @returns APIリクエストbody
+   */
   const buildSearchBody = (search: string) => {
     const parts = search.trim().split(/\s+/);
     const genreKey = parts[0];
@@ -149,6 +170,10 @@ export default function SearchPage() {
     return body;
   };
 
+  /**
+   * 検索ワードでAPIを叩いて店舗一覧を取得＆state更新
+   * @param keyword 入力された検索ワード
+   */
   const fetchData = async (keyword: string) => {
     if (!keyword.trim()) return;
 
@@ -173,11 +198,6 @@ export default function SearchPage() {
       body: JSON.stringify(searchBody),
     });
 
-    if (!res.ok) {
-      console.error("🔥 API error:", res.status);
-      return;
-    }
-
     const data = await res.json();
     const shops: HotPepperShop[] = Array.isArray(data) ? data : [];
 
@@ -190,6 +210,9 @@ export default function SearchPage() {
   //   fetchData(searchWord);
   // }, [searchWord]);
 
+  /**
+   * 検索UI＆おすすめ店舗リストの描画
+   */
   return (
     <div className="mx-auto flex h-screen max-w-md flex-col">
       <Header />
@@ -226,11 +249,7 @@ export default function SearchPage() {
             <div className="mb-20 grid grid-cols-3 gap-px bg-gray-300">
               {recommendedShops.map((shop) => {
                 return (
-                  <Link
-                    href={`/detail/${shop.id}`}
-                    key={shop.id}
-                    onClick={() => console.log("▶︎ 遷移前 id:", shop.id)}
-                  >
+                  <Link href={`/detail/${shop.id}`} key={shop.id}>
                     <div className="bg-white p-2">
                       <Image
                         src={getSafeLogoImage(shop)}

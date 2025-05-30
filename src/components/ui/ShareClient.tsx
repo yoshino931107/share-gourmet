@@ -34,20 +34,46 @@ interface Group {
 const fallbackImage =
   "https://images.unsplash.com/photo-1555992336-c47a0c5141a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80";
 
+/**
+ * シェアされたお店をグループごとに表示するクライアントコンポーネント
+ */
 export default function ShareClient() {
+  /**
+   * @description ローディング状態
+   */
   const [isLoading, setIsLoading] = useState(true);
+
+  /**
+   * @description Supabaseクライアント（useMemoで初期化）
+   */
   const supabase = useMemo(() => createClientComponentClient(), []);
 
+  /**
+   * @description クエリパラメータからグループIDを取得
+   */
   const searchParams = useSearchParams();
   const groupIdFromQuery = searchParams.get("group");
 
+  /**
+   * @description 選択中のグループID
+   */
   const [selectedGroupId, setSelectedGroupId] = useState<string | undefined>(
     undefined,
   );
 
+  /**
+   * @description 共有されたお店一覧（重複なし）
+   */
   const [sharedShops, setSharedShops] = useState<HotPepperShop[]>([]);
+
+  /**
+   * @description ユーザーが所属するグループ一覧
+   */
   const [groups, setGroups] = useState<Group[]>([]);
 
+  /**
+   * @description グループ一覧取得後に選択中グループをセット
+   */
   useEffect(() => {
     if (groups.length > 0) {
       const newSelectedGroupId = groupIdFromQuery ?? groups[0].id;
@@ -55,6 +81,9 @@ export default function ShareClient() {
     }
   }, [groups, groupIdFromQuery]);
 
+  /**
+   * @description ユーザーに紐づくグループ一覧をSupabaseから取得
+   */
   useEffect(() => {
     const fetchGroups = async () => {
       const {
@@ -78,10 +107,17 @@ export default function ShareClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /**
+   * @description HotPepper APIで取得したお店情報をキャッシュするためのstate
+   * key: hotpepper_id, value: お店情報
+   */
   const [apiShopInfo, setApiShopInfo] = useState<{
     [id: string]: HotPepperShop;
   }>({});
 
+  /**
+   * @description 共有ショップ一覧が更新された時、HotPepper APIから店舗詳細データをまとめて取得
+   */
   useEffect(() => {
     if (sharedShops.length === 0) return;
 
@@ -114,6 +150,9 @@ export default function ShareClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sharedShops]);
 
+  /**
+   * @description Supabaseからシェアされたお店情報（重複なし）を取得しstateにセット
+   */
   useEffect(() => {
     const fetchSharedShops = async () => {
       setIsLoading(true);
@@ -155,12 +194,21 @@ export default function ShareClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /**
+   * @description 共有ショップ一覧が更新されたらローディング終了
+   */
   useEffect(() => {
     setIsLoading(false);
   }, [sharedShops]);
 
+  /**
+   * @description 統合後の店舗情報
+   */
   const [shops, setShops] = useState<HotPepperShop[]>([]);
 
+  /**
+   * @description 共有ショップとAPIショップ情報をマージし、グループ名も補完
+   */
   useEffect(() => {
     if (sharedShops.length === 0) {
       setShops([]);
@@ -181,19 +229,25 @@ export default function ShareClient() {
     setShops(mergedShops);
   }, [sharedShops, apiShopInfo, groups]);
 
+  /**
+   * @description 選択中のグループで絞り込んだ店舗情報
+   */
   const filteredShops = shops.filter(
     (shop) => shop.group_id === selectedGroupId,
   );
 
+  // --- 描画部分 ---
   return (
     <div className="mx-auto flex h-screen max-w-md flex-col">
       <Header />
+      {/* グループ選択タブ＆ローディング表示 */}
       {!selectedGroupId ? (
         <div className="flex flex-1 items-center justify-center text-gray-400">
           loading...
         </div>
       ) : (
         <>
+          {/* グループタブ 横スクロール対応 */}
           <div
             className="flex w-full flex-nowrap overflow-x-auto border-t border-b bg-white px-2 py-2 whitespace-nowrap"
             style={{ WebkitOverflowScrolling: "touch" }}
@@ -212,6 +266,7 @@ export default function ShareClient() {
               </button>
             ))}
           </div>
+          {/* お店リスト表示部分 */}
           <main className="flex-1 overflow-y-auto bg-gray-50 p-2">
             {isLoading ? (
               <p className="mt-70 p-4 text-center text-sm text-gray-400">
