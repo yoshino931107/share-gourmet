@@ -4,11 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/utils/supabase/supabase";
+import type { User } from "@supabase/supabase-js";
 
 type HeaderProps = React.HTMLAttributes<HTMLElement>;
 
 export default function Header({ className, ...props }: HeaderProps) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     // ユーザー取得
