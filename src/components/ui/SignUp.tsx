@@ -69,6 +69,7 @@ export const SignUp = () => {
       // 3. 正常時はログインページへ遷移
       alert("サインアップ成功！ログインページに移動します。");
       router.push("/auth/login");
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       alert("予期しないエラーが発生しました。");
     }
