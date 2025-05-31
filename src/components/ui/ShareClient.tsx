@@ -277,7 +277,7 @@ export default function ShareClient() {
                 Loading...✍️
               </p>
             ) : (
-              <div className="grid grid-cols-3 gap-px bg-gray-50">
+              <div className="grid grid-cols-3 gap-px bg-gray-50 pb-20">
                 {filteredShops.map((shop) => {
                   return (
                     <Link

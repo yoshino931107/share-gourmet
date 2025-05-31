@@ -43,6 +43,8 @@ export async function POST(req: Request) {
   /**
    * ユーザー認証チェック。未ログインなら401を返す
    */
+  // const cookieStore = await cookies();
+  // const token = cookieStore.get("sb-xxx-auth-token")?.value;
   const supabase = createServerComponentClient({ cookies });
   const {
     data: { user },

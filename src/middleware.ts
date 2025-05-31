@@ -1,6 +1,9 @@
 import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * 全ページ共通でユーザー認証を判定し、リダイレクトを行うミドルウェア
+ */
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
   const supabase = createMiddlewareClient({ req, res });
@@ -11,23 +14,31 @@ export async function middleware(req: NextRequest) {
 
   const { pathname } = req.nextUrl;
 
-  // 無限リダイレクトを避けるために明確な条件を指定
+  // 未ログインで /auth 配下以外にアクセス → ログインページへリダイレクト
   if (!user && !pathname.startsWith("/auth")) {
     return NextResponse.redirect(new URL("/auth/login", req.url));
   }
 
-  // ログイン済みユーザーがログインページにアクセスしようとしたらトップページへ
+  // ログイン済みで /auth 配下にアクセス → /search にリダイレクト＆通知フラグ付与
   if (user && pathname.startsWith("/auth")) {
-    return NextResponse.redirect(new URL("/", req.url));
+    const url = new URL("/search", req.url);
+    url.searchParams.set("status", "already_logged_in");
+    return NextResponse.redirect(url);
   }
-
-  return res;
 }
 
-// Middlewareを適用するパス
+// ミドルウェアを適用するパスを明示
 export const config = {
   matcher: [
-    // _next、static files、favicon、auth を除外した全ページに適用
-    "/((?!auth|_next/static|_next/image|favicon.ico).*)",
+    // ログイン＆サインアップ画面にも必ず適用する
+    "/auth/:path*",
+    // ↓ 必要なら他ページにも適用
+    // "/",
+    // "/share",
+    // "/share-detail/:path*",
+    // "/map",
+    // "/private",
+    // "/mypage",
+    // "/group_setting",
   ],
 };

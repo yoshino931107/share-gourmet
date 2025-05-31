@@ -47,7 +47,10 @@ export default function ShareDetailPage() {
   const [shop, setShop] = useState<HotPepperShop | null>(null);
   const [memoInput, setMemoInput] = useState("");
   const [memos, setMemos] = useState<HotPepperShop[]>([]);
-  const [loadingMemos] = useState(true);
+  const [loadingMemos] = useState(false);
+  // 追加
+  const [editingMemoId, setEditingMemoId] = useState<string | null>(null);
+  const [editMemoInput, setEditMemoInput] = useState<string>("");
 
   /**
    * このuseEffectはコンポーネントのマウント時およびidやtableNameが変わった時に
@@ -135,6 +138,48 @@ export default function ShareDetailPage() {
       setMemos(memosData || []);
     }
   }
+  /**
+   * メモを編集して更新する処理
+   */
+  async function handleUpdateMemo(memoId: string) {
+    if (!editMemoInput.trim()) return;
+    const { error } = await supabase
+      .from("memos")
+      .update({ content: editMemoInput })
+      .eq("id", memoId);
+
+    if (error) {
+      alert("メモの更新に失敗しました🥲");
+      return;
+    }
+    setEditingMemoId(null);
+    setEditMemoInput("");
+    // メモ一覧を再取得して最新状態に
+    if (shop?.id) {
+      const { data: memosData } = await supabase
+        .from("memos")
+        .select("*")
+        .eq("shop_id", shop.id)
+        .order("created_at", { ascending: false });
+      setMemos(memosData || []);
+    }
+  }
+
+  useEffect(() => {
+    if (!shop?.id) return;
+
+    // メモ一覧を取得してstateにセット
+    const fetchMemos = async () => {
+      const { data: memosData } = await supabase
+        .from("memos")
+        .select("*")
+        .eq("shop_id", shop.id)
+        .order("created_at", { ascending: false });
+      setMemos(memosData || []);
+    };
+
+    fetchMemos();
+  }, [shop?.id, supabase]);
 
   return (
     <>
@@ -174,26 +219,53 @@ export default function ShareDetailPage() {
                       key={memo.id}
                       className="relative rounded bg-gray-100 px-3 py-2 text-sm text-gray-800"
                     >
-                      {memo.content}
-                      <span className="mt-1 block text-xs text-gray-400">
-                        {memo.created_at
-                          ? new Date(memo.created_at).toLocaleString("ja-JP")
-                          : ""}
-                      </span>
-                      <button
-                        className="absolute top-2 right-2 text-xs text-red-400 hover:text-red-600"
-                        onClick={() => handleDeleteMemo(memo.id)}
-                        aria-label="削除"
-                      >
-                        削除
-                      </button>
+                      {/* 編集モードかどうか */}
+                      {editingMemoId === memo.id ? (
+                        <>
+                          <textarea
+                            value={editMemoInput}
+                            onChange={(e) => setEditMemoInput(e.target.value)}
+                            className="w-full rounded border p-1 text-sm"
+                          />
+                          <div className="mt-1 flex gap-2">
+                            <button
+                              onClick={() => handleUpdateMemo(memo.id)}
+                              className="text-blue-500 hover:underline"
+                            >
+                              保存
+                            </button>
+                            <button
+                              onClick={() => setEditingMemoId(null)}
+                              className="text-gray-400 hover:underline"
+                            >
+                              キャンセル
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          {memo.content}
+                          {/* ...省略（作成日時など） */}
+                          <button
+                            onClick={() => {
+                              setEditingMemoId(memo.id);
+                              setEditMemoInput(memo.content ?? "");
+                            }}
+                            className="absolute top-2 right-10 text-xs text-green-400 hover:text-green-600"
+                          >
+                            編集
+                          </button>
+                          <button
+                            className="absolute top-2 right-2 text-xs text-red-400 hover:text-red-600"
+                            onClick={() => handleDeleteMemo(memo.id)}
+                            aria-label="削除"
+                          >
+                            削除
+                          </button>
+                        </>
+                      )}
                     </li>
                   ))}
-                  {memos.length === 0 && (
-                    <li className="text-sm text-gray-400">
-                      メモはまだありません
-                    </li>
-                  )}
                 </ul>
               )}
               <textarea

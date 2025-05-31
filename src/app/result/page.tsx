@@ -5,7 +5,7 @@ import ResultClient from "@/components/ui/ResultClient";
 
 export default function ResultPage() {
   return (
-    <div className="mx-auto flex h-screen max-w-md flex-col">
+    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-gray-50">
       <Header />
       <Suspense
         fallback={

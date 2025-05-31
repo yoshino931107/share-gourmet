@@ -102,7 +102,7 @@ export default function PrivateClient() {
           </p>
         ) : (
           // お店一覧をグリッド表示
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-2 pb-20">
             {shops.map((shop) => (
               <div
                 key={shop.id}

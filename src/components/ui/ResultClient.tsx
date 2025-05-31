@@ -103,7 +103,7 @@ const ResultClient: React.FC<ResultClientProps> = ({ className }) => {
             <span className="text-lg text-gray-500">Loading...</span>
           </div>
         ) : (
-          <ul className="space-y-4">
+          <ul className="space-y-4 pb-18">
             {shops.map((shop) => {
               return (
                 <li

@@ -53,16 +53,15 @@ export const SignUp = () => {
       }
 
       // 2. profilesテーブルにnameなど追加登録
-      const { error: insertError } = await supabase.from("profiles").insert([
+      const { error: upsertError } = await supabase.from("profiles").upsert([
         {
           id: userId,
           name: formData.name,
           email: formData.email,
         },
       ]);
-
-      if (insertError) {
-        alert("ユーザーデータの保存に失敗しました：" + insertError.message);
+      if (upsertError) {
+        alert("ユーザーデータの保存に失敗しました：" + upsertError.message);
         return;
       }
 
