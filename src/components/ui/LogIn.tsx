@@ -124,7 +124,7 @@ export const LogIn = () => {
           {/* 送信ボタン */}
           <button
             type="submit"
-            className="mt-5 w-full rounded-full bg-blue-500 py-2 text-lg font-semibold text-white transition hover:bg-blue-600"
+            className="mt-5 w-full rounded-md bg-amber-500 py-2 text-lg font-semibold text-white transition hover:bg-amber-600"
           >
             ログイン
           </button>
@@ -137,7 +137,7 @@ export const LogIn = () => {
           Don&apos;t have an account?{" "}
           <Link
             href="/auth/signup"
-            className="font-medium text-blue-500 hover:underline"
+            className="font-medium text-amber-600 hover:underline"
           >
             Sign Up
           </Link>
