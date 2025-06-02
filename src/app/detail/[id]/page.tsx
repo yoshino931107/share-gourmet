@@ -382,7 +382,7 @@ export default function DetailPage() {
                   alt={shops[0]?.name ?? "お店の画像"}
                   width={400}
                   height={400}
-                  className="aspect-square w-full rounded object-cover"
+                  className="aspect-square w-full object-cover"
                 />
               );
             })()}
@@ -409,7 +409,7 @@ export default function DetailPage() {
             </div>
           </div>
         )}
-        <div className="fixed bottom-30 left-1/2 z-10 w-full max-w-[390px] -translate-x-1/2 px-3">
+        <div className="fixed bottom-21 left-1/2 z-10 w-full max-w-[390px] -translate-x-1/2 px-3">
           <div className="flex w-full justify-between gap-3">
             {/* 保存ボタン */}
             <button
