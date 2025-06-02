@@ -30,15 +30,15 @@ export async function middleware(req: NextRequest) {
 // ミドルウェアを適用するパスを明示
 export const config = {
   matcher: [
-    // ログイン＆サインアップ画面にも必ず適用する
     "/auth/:path*",
-    // ↓ 必要なら他ページにも適用
-    // "/",
-    // "/share",
-    // "/share-detail/:path*",
-    // "/map",
-    // "/private",
-    // "/mypage",
-    // "/group_setting",
+    "/detail/:path*",
+    "/group_setting",
+    "/map",
+    "/mypage",
+    "/private",
+    "/result",
+    "/search",
+    "/share",
+    "/share-detail/:path*",
   ],
 };
