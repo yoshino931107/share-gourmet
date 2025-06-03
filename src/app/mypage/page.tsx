@@ -21,7 +21,7 @@ export default function MyPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-100">
+    <div className="flex min-h-screen flex-col bg-gray-50">
       {/**
        * @description ページ上部のヘッダーコンポーネントを表示する。
        */}
