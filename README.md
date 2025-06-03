@@ -49,10 +49,10 @@ https://share-gourmet.vercel.app/auth/login
 
 * テストアカウント
     * メールアドレス<br />
-　　 devtest.yoshino@gmail.com
+devtest.yoshino@gmail.com
 
     * パスワード<br />
-　　 12345abcde
+12345abcde
 
 # 画面キャプチャ<br />
 <img width="419" alt="スクリーンショット 2025-06-02 18 42 51" src="https://github.com/user-attachments/assets/ec5835ed-bf19-404a-aa55-76f8ef5eeaf6" />
